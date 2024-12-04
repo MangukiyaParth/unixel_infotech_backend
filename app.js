@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('static'));
 
 // const port = process.env.PORT;
-client.connect();
+// client.connect();
 
 app.get('/', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
