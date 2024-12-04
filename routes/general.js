@@ -3,9 +3,11 @@ const router = express.Router();
 var fetchuser = require('../middlewere/fetchuser');
 var dbUtils = require('../helper/index').Db;
 const { body, validationResult } = require('express-validator');
+const multer = require('multer');
+const upload = multer();
 
 // Get State
-router.get('/state', fetchuser, [], async (req, res)=>{
+router.get('/state', fetchuser, upload.none(), [], async (req, res)=>{
         let status = 0;
         try{
             const state = await dbUtils.execute(`SELECT id, state_name FROM tbl_states`);
@@ -23,7 +25,7 @@ router.get('/state', fetchuser, [], async (req, res)=>{
 })
 
 // Get City
-router.get('/city', fetchuser, [], async (req, res)=>{
+router.get('/city', fetchuser, upload.none(), [], async (req, res)=>{
         let status = 0;
         
         try{

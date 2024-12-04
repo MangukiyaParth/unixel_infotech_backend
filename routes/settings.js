@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 var fetchuser = require('../middlewere/fetchuser');
 var dbUtils = require('../helper/index').Db;
+const multer = require('multer');
+const upload = multer();
 
 // Get User by Id
-router.get('/', fetchuser, [], async (req, res)=>{
+router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     try{
         const settings = await dbUtils.execute_single(`SELECT * FROM tbl_settings LIMIT 1`);
@@ -22,7 +24,7 @@ router.get('/', fetchuser, [], async (req, res)=>{
 })
 
 // Update setting 
-router.put('/', fetchuser, [], async (req, res)=>{
+router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const { late_time, notice, paid_leave_limit } = req.body;
     try{

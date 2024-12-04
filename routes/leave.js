@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 var fetchuser = require('../middlewere/fetchuser');
 var dbUtils = require('../helper/index').Db;
+const multer = require('multer');
+const upload = multer();
 
 // Create a Leave
-router.post('/', fetchuser, [], async (req, res)=>{
+router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0; 
     const {leaveDate, leave_type, leave_description, start_date, end_date, dateData} = req.body;
     const { id } = req.user;
@@ -86,7 +88,7 @@ router.post('/', fetchuser, [], async (req, res)=>{
 });
 
 // Update a leave 
-router.put('/', fetchuser, [], async (req, res)=>{
+router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
         let status = 0;
         const {leaveDate, leave_type, leave_description, start_date, end_date, dateData, id} = req.body;
         try{
@@ -168,7 +170,7 @@ router.put('/', fetchuser, [], async (req, res)=>{
 });
 
 // Delete a leave
-router.delete('/', fetchuser, [], async (req, res)=>{
+router.delete('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const {id} = req.body;
     try{
@@ -190,7 +192,7 @@ router.delete('/', fetchuser, [], async (req, res)=>{
 });
 
 // Get leaves
-router.get('/', fetchuser, [], async (req, res)=>{
+router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
 	let { search, page, page_size, sortField, sortDirection } = req.query;
 	const ITEMS_PER_PAGE = page_size;
     page = parseInt(page);
@@ -246,7 +248,7 @@ router.get('/', fetchuser, [], async (req, res)=>{
 });
 
 // Get leave by Id
-router.get('/leavebyid', fetchuser, [], async (req, res)=>{
+router.get('/leavebyid', fetchuser, upload.none(), [], async (req, res)=>{
 	let { id } = req.query;
     try{
         const leave = await dbUtils.execute_single(`SELECT l.* FROM tbl_leaves l WHERE id = '${id}'`);
@@ -265,7 +267,7 @@ router.get('/leavebyid', fetchuser, [], async (req, res)=>{
 });
 
 // Update a leave status
-router.put('/status', fetchuser, [], async (req, res)=>{
+router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const {modalLeaveId, modalLeaveStatus, rejectDescription} = req.body;
     try{
@@ -287,7 +289,7 @@ router.put('/status', fetchuser, [], async (req, res)=>{
 });
 
 // Get paid leave count
-router.get('/paid-count', fetchuser, [], async (req, res)=>{
+router.get('/paid-count', fetchuser, upload.none(), [], async (req, res)=>{
 	let { id, startDate } = req.query;
     const date = new Date(startDate);
     const curr_year = date.getFullYear();

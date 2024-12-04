@@ -5,11 +5,13 @@ var jwt = require('jsonwebtoken');
 var fetchuser = require('../middlewere/fetchuser');
 var dbUtils = require('../helper/index').Db;
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const upload = multer();
 
 const JWT_SECRET = process.env.ENCR;
 
 // Create a Account
-router.post('/createaccount', [], async (req, res)=>{
+router.post('/createaccount', upload.none(), [], async (req, res)=>{
     let status = 0; 
     const {accTypeId, empTypeId, alias, first_name, last_name, address, stateId, cityId, district, pincode, mobile, email, password ,gender, join_date, birth_date, salary} = req.body;
     // console.log(req.body);
@@ -50,7 +52,7 @@ router.post('/createaccount', [], async (req, res)=>{
 });
 
 // Update a User 
-router.put('/account', fetchuser, [], async (req, res)=>{
+router.put('/account', fetchuser, upload.none(), [], async (req, res)=>{
         let status = 0;
         const {id, accTypeId, empTypeId, alias, first_name, last_name, address, stateId, cityId, district, pincode, mobile, email, gender, join_date, birth_date, salary} = req.body;
         
@@ -89,7 +91,7 @@ router.put('/account', fetchuser, [], async (req, res)=>{
 });
 
 // Delete an Account
-router.delete('/account', fetchuser, [], async (req, res)=>{
+router.delete('/account', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const {id} = req.body;
     try{
@@ -111,7 +113,7 @@ router.delete('/account', fetchuser, [], async (req, res)=>{
 });
 
 // Get Users
-router.get('/accounts', fetchuser, [], async (req, res)=>{
+router.get('/accounts', fetchuser, upload.none(), [], async (req, res)=>{
 	let { search, page, page_size, sortField, sortDirection } = req.query;
 	const ITEMS_PER_PAGE = page_size;
     page = parseInt(page);
@@ -213,7 +215,7 @@ router.get('/accounts', fetchuser, [], async (req, res)=>{
 })
 
 // Get User by Id
-router.get('/accountbyid', fetchuser, [], async (req, res)=>{
+router.get('/accountbyid', fetchuser, upload.none(), [], async (req, res)=>{
 	let { id } = req.query;
     let status = 0;
     try{
@@ -276,7 +278,7 @@ router.get('/accountbyid', fetchuser, [], async (req, res)=>{
 })
 
 // Get User Type
-router.get('/usertype', fetchuser, [], async (req, res)=>{
+router.get('/usertype', fetchuser, upload.none(), [], async (req, res)=>{
 	let status = 0;
 	try{
 		const usertype = await dbUtils.execute(`SELECT id, usertype FROM tbl_user_types WHERE id != '410544b2-4001-4271-9855-fec4b6a6442a'`);
@@ -294,7 +296,7 @@ router.get('/usertype', fetchuser, [], async (req, res)=>{
 })
 
 // Get Employee Type
-router.get('/employeetype', fetchuser, [], async (req, res)=>{
+router.get('/employeetype', fetchuser, upload.none(), [], async (req, res)=>{
 	let status = 0;
 	try{
 		const employeetype = await dbUtils.execute(`SELECT id, employeetype FROM tbl_employee_types`);
@@ -312,9 +314,8 @@ router.get('/employeetype', fetchuser, [], async (req, res)=>{
 })
 
 // Get loggedin user detail 
-router.post('/login', [body('email', 'Enter a email').exists(),body('password', 'Enter a password').exists()], async (req, res)=>{
+router.post('/login', upload.none(), [body('email', 'Enter a email').exists(),body('password', 'Enter a password').exists()], async (req, res)=>{
 
-    console.log("call", req.body);
     // Validation error
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -322,7 +323,6 @@ router.post('/login', [body('email', 'Enter a email').exists(),body('password', 
     }
     try{
         const { email, password } = req.body;
-        console.log(email);
         // const hashedPassword = await bcrypt.hash(password, 10);
         const user = await dbUtils.execute_single(`SELECT
 			u.id,
@@ -341,7 +341,6 @@ router.post('/login', [body('email', 'Enter a email').exists(),body('password', 
 		LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
         JOIN tbl_user_types ut ON u.usertype = ut.id 
         WHERE u.email = '${email}'`);
-        console.log(user);
         if(!user){
             return res.status(400).json({status:0, error: "User not found."})
         }
@@ -377,7 +376,7 @@ router.post('/login', [body('email', 'Enter a email').exists(),body('password', 
 });
 
 // Update a Profile 
-router.put('/profile', fetchuser, [], async (req, res)=>{
+router.put('/profile', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const { profile_pic, address, marital_status, bank_name, account_no, branch_name, ifsc_code, adhar_front, adhar_back, pan_front, pan_back, father_name, mother_name, father_contact, mother_contact} = req.body;
     try{
