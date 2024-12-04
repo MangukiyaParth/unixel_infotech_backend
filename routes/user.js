@@ -314,6 +314,7 @@ router.get('/employeetype', fetchuser, [], async (req, res)=>{
 // Get loggedin user detail 
 router.post('/login', [body('email', 'Enter a email').exists(),body('password', 'Enter a password').exists()], async (req, res)=>{
 
+    console.log("call", req.body);
     // Validation error
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
