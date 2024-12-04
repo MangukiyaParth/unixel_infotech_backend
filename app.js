@@ -5,19 +5,20 @@ const bodyParser = require('body-parser');
 var cors = require('cors');
 const client = require('./db');
 
-
 const app = express();
-const port = process.env.PORT;
+// Middleware
+app.use(cors());
+app.use(compression());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('static'));
+
+// const port = process.env.PORT;
 client.connect();
 
 app.get('/', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
 });
 
-// Express
-app.use('/static',express.static('static'));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(compression());
 
 // Available Routes
 app.use('/api/v1/user', require('./routes/user'));
