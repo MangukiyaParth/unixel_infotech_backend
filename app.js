@@ -7,7 +7,7 @@ const client = require('./db');
 
 const app = express();
 // Middleware
-app.use(cors());
+app.use(cors({ origin: 'https://unixel-infotech.vercel.app' }));
 app.use(compression());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('static'));
