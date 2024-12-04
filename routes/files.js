@@ -92,6 +92,7 @@ router.delete('/', fetchuser, upload.none(), [], async (req, res)=>{
         }
         else 
         {
+            // Add logic for check file use
             dbUtils.delete('tbl_files',"id='"+id+"'");
             res.json({ status: 1, message: "File deleted successfully." });
         }
