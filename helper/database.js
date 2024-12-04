@@ -2,7 +2,7 @@ const client = require('../db');
 
 function is_mysql_func(value)
 {
-    pos = value.indexOf("TIMESTAMP");
+    let pos = value.indexOf("TIMESTAMP");
     if (pos && pos > -1) return true;
 
     pos = value.indexOf("TIMESTAMPDIFF(");
