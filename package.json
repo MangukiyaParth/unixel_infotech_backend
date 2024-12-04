@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "start": "npm start",
     "test": "npm start",
     "dev": "node app",
     "seed": "node -r dotenv/config ./default_db.js"
