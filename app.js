@@ -10,7 +10,7 @@ const app = express();
 const port = process.env.PORT;
 client.connect();
 
-app.get('/api/v1', (req, res) => {
+app.get('/', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
 });
 
