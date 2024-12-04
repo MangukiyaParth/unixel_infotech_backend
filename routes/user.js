@@ -339,6 +339,7 @@ router.post('/login', [body('email', 'Enter a email').exists(),body('password', 
 		LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
         JOIN tbl_user_types ut ON u.usertype = ut.id 
         WHERE u.email = '${email}'`);
+        console.log(user);
         if(!user){
             return res.status(400).json({status:0, error: "User not found."})
         }

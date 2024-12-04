@@ -132,16 +132,13 @@ async function seedEmployeeTime(client) {
             );
         `);
 
-        console.log(`Created "tbl_employee_types" table`);
-
-        client.query(`INSERT INTO tbl_employee_types (employeetype) VALUES ('Android Developer');`);
-        client.query(`INSERT INTO tbl_employee_types (employeetype) VALUES ('Designer');`);
+        console.log(`Created "tbl_employee_time" table`);
 
         return {
             createTable
         };
     } catch (error) {
-        console.error('Error seeding employee type:', error);
+        console.error('Error seeding employee time:', error);
         throw error;
     }
 }
