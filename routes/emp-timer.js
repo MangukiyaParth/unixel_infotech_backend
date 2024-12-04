@@ -1,12 +1,10 @@
 const express = require('express');
 const router = express.Router();
 var fetchuser = require('../middlewere/fetchuser');
-const multer  = require('multer');
-const upload = multer({ dest: 'uploads/' });
 var dbUtils = require('../helper/index').Db;
 
 // Get User time by Id
-router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
+router.get('/', fetchuser, [], async (req, res)=>{
 	let { id } = req.user;
     
     let status = 0;
@@ -32,7 +30,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
 });
 
 // Get User monthly time
-router.get('/monthly', fetchuser, upload.none(), [], async (req, res)=>{
+router.get('/monthly', fetchuser, [], async (req, res)=>{
 	let { id } = req.user;
     
     let status = 0;
@@ -59,7 +57,7 @@ router.get('/monthly', fetchuser, upload.none(), [], async (req, res)=>{
 });
 
 // Add employee time
-router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
+router.post('/', fetchuser, [], async (req, res)=>{
 	const { currStatus } = req.body;
     const { id } = req.user;
     const date = new Date();
