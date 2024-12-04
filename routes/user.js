@@ -321,6 +321,7 @@ router.post('/login', [body('email', 'Enter a email').exists(),body('password', 
     }
     try{
         const { email, password } = req.body;
+        console.log(email);
         // const hashedPassword = await bcrypt.hash(password, 10);
         const user = await dbUtils.execute_single(`SELECT
 			u.id,
