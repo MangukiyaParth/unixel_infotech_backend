@@ -10,6 +10,10 @@ const app = express();
 const port = process.env.PORT;
 client.connect();
 
+app.get('/api/v1', (req, res) => {
+    res.json({ message: 'Hello from Node.js backend!' });
+});
+
 // Express
 app.use('/static',express.static('static'));
 app.use(bodyParser.urlencoded({ extended: true }));
