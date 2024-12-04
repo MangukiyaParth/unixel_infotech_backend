@@ -11,8 +11,7 @@ const port = process.env.PORT;
 client.connect();
 
 app.get('/', (req, res) => {
-    // res.json({ message: 'Hello from Node.js backend!' });
-    return "Call";
+    res.json({ message: 'Hello from Node.js backend!' });
 });
 
 // Express
