@@ -66,20 +66,20 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
     const curr_date = date.toLocaleDateString("en-CA");
     let status = 0;
     try{
-        const account = await dbUtils.execute_single(`SELECT id FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' AND end_time is null ORDER BY entry_date DESC LIMIT 1`);
-        if(currStatus == 3){
-            if(account){
-                let_update = [];
-                let_update['end_time'] = 'NOW()';
-                dbUtils.update('tbl_employee_time', let_update, "id='"+account.id+"'");
-            }
+        const account = await dbUtils.execute_single(`SELECT id, start_time FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' AND end_time is null ORDER BY entry_date DESC LIMIT 1`);
+        if(account){
+            var startDate = new Date(+account.start_time);
+            var endDate   = new Date();
+            var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+            let_update = [];
+            let_update['end_time'] = 'NOW()';
+            let_update['total_time'] = seconds;
+            dbUtils.update('tbl_employee_time', let_update, "id='"+account.id+"'");
         }
-        else{
-            if(account){
-                let_update = [];
-                let_update['end_time'] = 'NOW()';
-                dbUtils.update('tbl_employee_time', let_update, "id='"+account.id+"'");
-            }
+        if(currStatus == 3){
+            // Add logic for clock out
+        }
+        else {
             if(account || currStatus == 1){
                 let timeData = [];
                 timeData['user_id'] = id;

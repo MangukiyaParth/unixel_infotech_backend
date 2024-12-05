@@ -17,9 +17,7 @@ function is_mysql_func(value)
 async function execute_query(query)
 {
     try {
-        // await client.connect();
         let qry_res = await client.query(query);
-        // await client.end();
         return qry_res?.rows;
     } catch (error) {
         console.log(error);

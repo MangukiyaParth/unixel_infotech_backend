@@ -128,6 +128,7 @@ async function seedEmployeeTime(client) {
                 entry_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
                 action_type integer DEFAULT 1,
                 start_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+                total_time integer NOT NULL DEFAULT 0,
                 end_time timestamp without time zone
             );
         `);
@@ -263,6 +264,8 @@ async function seedSettings(client) {
                 late_time VARCHAR(25),
                 paid_leave_limit integer,
                 notice text,
+                full_day_time integer,
+                half_day_time integer,
                 entry_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP
             );
         `);
