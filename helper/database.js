@@ -1,4 +1,4 @@
-const client = require('../db');
+const pool = require('../db');
 
 function is_mysql_func(value)
 {
@@ -17,7 +17,9 @@ function is_mysql_func(value)
 async function execute_query(query)
 {
     try {
+        const client = await pool.connect();
         let qry_res = await client.query(query);
+        client.release();
         return qry_res?.rows;
     } catch (error) {
         console.log(error);

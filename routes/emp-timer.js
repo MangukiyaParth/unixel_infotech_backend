@@ -65,27 +65,69 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA");
     let status = 0;
+    let askReason = false;
+    let updateEndTime = false;
     try{
         const account = await dbUtils.execute_single(`SELECT id, start_time FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' AND end_time is null ORDER BY entry_date DESC LIMIT 1`);
-        if(account){
-            var startDate = new Date(+account.start_time);
-            var endDate   = new Date();
-            var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-            let_update = [];
-            let_update['end_time'] = 'NOW()';
-            let_update['total_time'] = seconds;
-            dbUtils.update('tbl_employee_time', let_update, "id='"+account.id+"'");
-        }
         if(currStatus == 3){
             // Add logic for clock out
+            const totalTimeData = await dbUtils.execute_single(`SELECT
+                (SELECT SUM(total_time) FROM tbl_employee_time where action_type = 1 AND user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}') as total_time,
+                (SELECT full_day_time*60 FROM tbl_settings LIMIT 1) AS full_day_time,
+                (SELECT half_day_time*60 FROM tbl_settings LIMIT 1) AS half_day_time,
+                COALESCE((SELECT ld.leave_time FROM tbl_leave_dates ld join tbl_leaves l ON l.id = ld.leave_id where l.leave_status = 1 AND ld.user_id = '${id}' AND ld.leave_date = '${curr_date}'),'0') AS leave_type`);
+            if((totalTimeData.full_day_time > totalTimeData.total_time && totalTimeData.leave_type == 0) || 
+                ((totalTimeData.leave_type == 1 || totalTimeData.leave_type == 2) && totalTimeData.half_day_time > totalTimeData.total_time)){
+                askReason = true;
+            }
+            else{
+                updateEndTime = true;
+            }
         }
         else {
+            updateEndTime = true;
             if(account || currStatus == 1){
                 let timeData = [];
                 timeData['user_id'] = id;
                 timeData['action_type'] = currStatus;
-                dbUtils.insert('tbl_employee_time',timeData);
+                await dbUtils.insert('tbl_employee_time',timeData);
             }
+        }
+
+        if(account && updateEndTime){
+            var startDate = new Date(account.start_time);
+            var endDate   = new Date();
+            var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+            let time_update = [];
+            time_update['end_time'] = 'NOW()';
+            time_update['total_time'] = seconds;
+            await dbUtils.update('tbl_employee_time', time_update, "id='"+account.id+"'");
+        }
+        res.json({ status: 1, message: 'success', askReason: askReason});
+
+    } catch (error){
+        res.status(500).json({ status:status, error: "Internal server error"});
+    }
+});
+
+// Add employee clockout
+router.put('/clockout', fetchuser, upload.none(), [], async (req, res)=>{
+	const { reason } = req.body;
+    const { id } = req.user;
+    const date = new Date();
+    const curr_date = date.toLocaleDateString("en-CA");
+    let status = 0;
+    try{
+        const account = await dbUtils.execute_single(`SELECT id, start_time FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' AND end_time is null ORDER BY entry_date DESC LIMIT 1`);
+        if(account){
+            var startDate = new Date(account.start_time);
+            var endDate   = new Date();
+            var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+            let time_update = [];
+            time_update['end_time'] = 'NOW()';
+            time_update['total_time'] = seconds;
+            time_update['reason'] = reason;
+            await dbUtils.update('tbl_employee_time', time_update, "id='"+account.id+"'");
         }
         res.json({ status: 1, message: 'success'});
 

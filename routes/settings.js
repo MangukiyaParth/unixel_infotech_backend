@@ -28,14 +28,14 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const { late_time, notice, paid_leave_limit, full_day_time, half_day_time } = req.body;
     try{
-        dbUtils.execute('TRUNCATE tbl_settings');
+        await dbUtils.execute('TRUNCATE tbl_settings');
         let settingData = [];
         settingData['late_time'] = late_time;
         settingData['notice'] = notice;
         settingData['paid_leave_limit'] = paid_leave_limit;
         settingData['full_day_time'] = full_day_time;
         settingData['half_day_time'] = half_day_time;
-        dbUtils.insert('tbl_settings',settingData);
+        await dbUtils.insert('tbl_settings',settingData);
        
         status = 1;
         res.json({status:status, message: "Setting updated successfully."});
