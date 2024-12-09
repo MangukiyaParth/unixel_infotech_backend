@@ -291,7 +291,7 @@ router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
 // Get paid leave count
 router.get('/paid-count', fetchuser, upload.none(), [], async (req, res)=>{
 	let { id, startDate } = req.query;
-    const date = new Date(startDate);
+    const date = new Date(decodeURI(startDate));
     const curr_year = date.getFullYear();
     const curr_month = date.getFullYear()+"-"+(date.getMonth() + 1);
     const yearly_leave_limit = 12;
