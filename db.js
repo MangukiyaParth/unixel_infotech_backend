@@ -6,9 +6,9 @@ const pool = new Pool({
   host: process.env.POSTGRES_HOST,
   port: process.env.PGPORT,
   database: process.env.POSTGRES_DATABASE,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  // ssl: {
+  //   rejectUnauthorized: false,
+  // },
 });
 
 
