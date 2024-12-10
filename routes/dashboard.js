@@ -19,24 +19,23 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
     next_day = (next_day.length < 2) ? ('0' + next_day) : next_day;
 
     var month = curr_month + "-" + curr_day;
-    var next_date = curr_month + "-" + next_day;
     try{
         const birthdayData = await dbUtils.execute(`select u.id,u.profile_pic,ut.usertype, u.usertype AS usertypeid, et.employeetype, u.name, u.birth_date, 
             TO_DATE(u.birth_date, 'DD/MM/YYYY') as birth_date_formated,
-            CASE WHEN (TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'MM-DD') = '${month}') THEN 'Today'
-                WHEN (TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'MM-DD') = '${next_date}') THEN 'Tomorrow' 
+            CASE WHEN (TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'DD') = '${curr_day}') THEN 'Today'
+                WHEN (TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'DD') = '${next_day}') THEN 'Tomorrow' 
                 ELSE TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'), 'DD Mon') 
                 END AS birth_date_notation
             FROM tbl_users u
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             JOIN tbl_user_types ut ON u.usertype = ut.id 
-            where TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'MM-DD') = '${month}'`);
+            WHERE TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'MM') = '${curr_month}'`);
         const workAnniData = await dbUtils.execute(`select u.id,u.profile_pic,ut.usertype, u.usertype AS usertypeid, et.employeetype, u.name, u.join_date, 
             TO_DATE(u.join_date, 'DD/MM/YYYY') as join_date_formated 
             FROM tbl_users u
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             JOIN tbl_user_types ut ON u.usertype = ut.id 
-            where TO_CHAR(TO_DATE(join_date, 'DD/MM/YYYY'),'MM-DD') = '${month}'`);
+            WHERE TO_CHAR(TO_DATE(join_date, 'DD/MM/YYYY'),'MM-DD') = '${month}'`);
         res.json({ status: 1, birthdayData: birthdayData, workAnniData: workAnniData});
 
     } catch (error){

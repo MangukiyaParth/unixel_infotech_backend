@@ -72,11 +72,11 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
         if(currStatus == 3){
             // Add logic for clock out
             const totalTimeData = await dbUtils.execute_single(`SELECT
-                (SELECT SUM(total_time) FROM tbl_employee_time where action_type = 1 AND user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}') as total_time,
+                (SELECT SUM(ROUND(EXTRACT(EPOCH FROM (CASE WHEN (end_time is null) THEN now() ELSE end_time END - start_time)))) AS difference FROM tbl_employee_time where action_type = 1 AND user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}') as total_time,
                 (SELECT full_day_time*60 FROM tbl_settings LIMIT 1) AS full_day_time,
                 (SELECT half_day_time*60 FROM tbl_settings LIMIT 1) AS half_day_time,
                 COALESCE((SELECT ld.leave_time FROM tbl_leave_dates ld join tbl_leaves l ON l.id = ld.leave_id where l.leave_status = 1 AND ld.user_id = '${id}' AND ld.leave_date = '${curr_date}'),'0') AS leave_type`);
-            if((totalTimeData.full_day_time > totalTimeData.total_time && totalTimeData.leave_type == 0) || 
+            if((totalTimeData.full_day_time > totalTimeData.total_time && totalTimeData.leave_type == '0') || 
                 ((totalTimeData.leave_type == 1 || totalTimeData.leave_type == 2) && totalTimeData.half_day_time > totalTimeData.total_time)){
                 askReason = true;
             }
