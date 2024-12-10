@@ -20,6 +20,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
 
     var month = curr_month + "-" + curr_day;
     var curr_full_date = curr_date.getFullYear() + "-" + curr_month + "-" + curr_day;
+    const curr_year = curr_date.getFullYear();
     try{
         const birthdayData = await dbUtils.execute(`select u.id,u.profile_pic,ut.usertype, u.usertype AS usertypeid, et.employeetype, u.name, u.birth_date, 
             TO_DATE(u.birth_date, 'DD/MM/YYYY') as birth_date_formated,
@@ -38,7 +39,19 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             JOIN tbl_user_types ut ON u.usertype = ut.id 
             WHERE TO_CHAR(TO_DATE(join_date, 'DD/MM/YYYY'),'MM-DD') = '${month}'`);
-        res.json({ status: 1, birthdayData: birthdayData, workAnniData: workAnniData});
+
+        const yearly_taken_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS yearly_leave 
+                FROM tbl_leave_dates ld
+                join tbl_leaves l on l.id = ld.leave_id
+                WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '2' AND l.leave_status != '2' AND
+                to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = '${curr_year}'`);
+        
+        const leave_cnt = {
+            total_leave: 12,
+            leave_taken: yearly_taken_leave.yearly_leave,
+            remain_leave: 12 - yearly_taken_leave.yearly_leave
+        };
+        res.json({ status: 1, birthdayData: birthdayData, workAnniData: workAnniData, leave_cnt: leave_cnt});
 
     } catch (error){
         res.status(500).json({ status:status, error: "Internal server error"});
