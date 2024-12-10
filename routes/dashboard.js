@@ -19,6 +19,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
     next_day = (next_day.length < 2) ? ('0' + next_day) : next_day;
 
     var month = curr_month + "-" + curr_day;
+    var curr_full_date = curr_date.getFullYear() + "-" + curr_month + "-" + curr_day;
     try{
         const birthdayData = await dbUtils.execute(`select u.id,u.profile_pic,ut.usertype, u.usertype AS usertypeid, et.employeetype, u.name, u.birth_date, 
             TO_DATE(u.birth_date, 'DD/MM/YYYY') as birth_date_formated,
@@ -29,7 +30,8 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
             FROM tbl_users u
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             JOIN tbl_user_types ut ON u.usertype = ut.id 
-            WHERE TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'MM') = '${curr_month}'`);
+            WHERE TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'MM') = '${curr_month}' AND 
+            TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'MMDD') >= TO_CHAR(TO_DATE('${curr_full_date}', 'YYYY-MM-DD'),'MMDD')`);
         const workAnniData = await dbUtils.execute(`select u.id,u.profile_pic,ut.usertype, u.usertype AS usertypeid, et.employeetype, u.name, u.join_date, 
             TO_DATE(u.join_date, 'DD/MM/YYYY') as join_date_formated 
             FROM tbl_users u
