@@ -281,6 +281,32 @@ async function seedSettings() {
     }
 }
 
+async function seedHoliday() {
+    try {
+        // Create the "users" table if it doesn't exist
+        const createTable = await pool.query(`
+            CREATE TABLE IF NOT EXISTS tbl_holiday
+            (
+                id UUID DEFAULT uuid_generate_v4() PRIMARY KEY UNIQUE,
+                holiday_year VARCHAR(50),
+                holiday_date VARCHAR(50),
+                holiday_title VARCHAR(100),
+                is_weekend integer DEFAULT 1,
+                user_id uuid,
+                entry_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        console.log(`Created "tbl_holiday" table`);
+        return {
+            createTable
+        };
+    } catch (error) {
+        console.error('Error seeding Holiday:', error);
+        throw error;
+    }
+}
+
 async function main() {
     await client.connect();
     client.on('error', (err) => {
@@ -295,6 +321,7 @@ async function main() {
     await seedLeave();
     await seedFiles();
     await seedSettings();
+    await seedHoliday();
   
     return;
     // await client.end();

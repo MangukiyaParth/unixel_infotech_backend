@@ -45,11 +45,11 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
                 join tbl_leaves l on l.id = ld.leave_id
                 WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '2' AND l.leave_status != '2' AND
                 to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = '${curr_year}'`);
-        
+        let yearly_leave = yearly_taken_leave.yearly_leave || 0;
         const leave_cnt = {
             total_leave: 12,
-            leave_taken: yearly_taken_leave.yearly_leave,
-            remain_leave: 12 - yearly_taken_leave.yearly_leave
+            leave_taken: yearly_leave,
+            remain_leave: 12 - yearly_leave
         };
         res.json({ status: 1, birthdayData: birthdayData, workAnniData: workAnniData, leave_cnt: leave_cnt});
 
