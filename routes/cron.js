@@ -20,10 +20,10 @@ export default async function handler(req, res) {
             await dbUtils.insert('tbl_holiday',holidayData);
         }
     }
-    res.status(200).end('Hello Cron!');
+    return res.status(200).end('Hello Cron!');
 }
 
-export function getDefaultOffDays(year) {
+function getDefaultOffDays(year) {
     var date = new Date(year, 0, 1);
     while (date.getDay() != 0) {
         date.setDate(date.getDate() + 1);
