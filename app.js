@@ -29,7 +29,7 @@ app.use('/api/v1/leave', require('./routes/leave'));
 app.use('/api/v1/settings', require('./routes/settings'));
 app.use('/api/v1/dashboard', require('./routes/dashboard'));
 app.use('/api/v1/holiday', require('./routes/holiday'));
-app.use('/hello', require('./api/hello'));
+app.use('/holiday-cron', require('./api/holiday'));
 
 //START SERVER
 // app.listen(port, ()=>{

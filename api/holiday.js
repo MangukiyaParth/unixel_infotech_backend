@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+var dbUtils = require('../helper/index').Db;
 
 // Get User time by Id
 router.get('/', async (req, res)=>{
@@ -21,9 +22,20 @@ router.get('/', async (req, res)=>{
         date.setDate(date.getDate() + 7);
     }
     let weekoffDays = days;
-    console.log(weekoffDays);
+    for(const date of weekoffDays) {
+        const holidayData = await dbUtils.execute_single(`SELECT id FROM tbl_holiday WHERE holiday_year = '${year}' AND holiday_date = '${date}' AND is_weekend = '1'`);
+        if(!holidayData){
+            let holidayData = [];
+            holidayData['holiday_year'] = year;
+            holidayData['holiday_date'] = date;
+            holidayData['holiday_title'] = 'Week Off';
+            holidayData['is_weekend'] = '1';
+            holidayData['user_id'] = '410544b2-4001-4271-9855-fec4b6a6442a';
+            await dbUtils.insert('tbl_holiday',holidayData);
+        }
+    }
     // res(`Hello from ${process.env.VERCEL_REGION}`);
-    res.status(200).json({ message: "Hello"});
+    res.status(200).json({ message: "Success"});
 });
 
 module.exports = router;

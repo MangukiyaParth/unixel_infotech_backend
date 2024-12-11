@@ -13,10 +13,7 @@
         }
     ],
     "crons": [{
-        "path": "/api/cron",
+        "path": "/holiday-cron",
         "schedule": "0 0 1 12 *"
-    },{
-        "path": "/hello",
-        "schedule": "0 5 * * *"
     }]
 }
