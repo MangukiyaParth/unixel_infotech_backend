@@ -5,7 +5,7 @@ var dbUtils = require('../helper/index').Db;
 // Get User time by Id
 router.get('/', async (req, res)=>{
     let year = (new Date()).getFullYear() + 1;
-    
+    year = 2024;
     var date = new Date(year, 0, 1);
     while (date.getDay() != 0) {
         date.setDate(date.getDate() + 1);
