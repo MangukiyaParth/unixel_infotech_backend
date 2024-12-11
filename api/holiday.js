@@ -5,7 +5,7 @@ var dbUtils = require('../helper/index').Db;
 // Get User time by Id
 router.get('/', async (req, res)=>{
     let year = (new Date()).getFullYear() + 1;
-    
+    year = 2024;
     var date = new Date(year, 0, 1);
     while (date.getDay() != 0) {
         date.setDate(date.getDate() + 1);
@@ -20,6 +20,22 @@ router.get('/', async (req, res)=>{
             year
         );
         date.setDate(date.getDate() + 7);
+    }
+
+    var date = new Date(year, 0, 1);
+    let curr_loop_month = 1;
+    while (date.getFullYear() == year) {
+        var m = date.getMonth() + 1;
+        var d = date.getDate();
+        if(date.getDay()==6 && m == curr_loop_month){   //if Saturday
+            days.push(
+                (d < 10 ? '0' + d : d) + '/' +
+                (m < 10 ? '0' + m : m) + '/' +
+                year
+            );
+            curr_loop_month++;
+        }
+        date.setDate(date.getDate() + 1);
     }
     let weekoffDays = days;
     for(const date of weekoffDays) {
