@@ -7,6 +7,7 @@ if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
 // export default async function handler(req, res) {
     let year = (new Date()).getFullYear() + 1;
     let weekoffDays = getDefaultOffDays(year);
+    console.log(weekoffDays);
     for(const val of weekoffDays) {
         let date = val;
         const holidayData = await dbUtils.execute_single(`SELECT id FROM tbl_holiday WHERE holiday_year = '${year}' AND holiday_date = '${date}' AND is_weekend = '1'`);
