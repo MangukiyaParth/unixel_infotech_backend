@@ -5,7 +5,7 @@ const multer = require('multer');
 const upload = multer();
 
 // Get User time by Id
-router.post('/', upload.none(), [], async (req, res)=>{
+router.get('/', upload.none(), [], async (req, res)=>{
     // res(`Hello from ${process.env.VERCEL_REGION}`);
     res.status(500).json({ message: "Hello"});
 });
