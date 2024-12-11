@@ -1,3 +1,4 @@
+console.log("Run");
 var dbUtils = require('../helper/index').Db;
 
 if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
