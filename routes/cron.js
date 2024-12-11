@@ -4,7 +4,7 @@ if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).end('Unauthorized');
 }
 
-export default async function handler(req, res) {
+// export default async function handler(req, res) {
     let year = (new Date()).getFullYear() + 1;
     let weekoffDays = getDefaultOffDays(year);
     for(const val of weekoffDays) {
@@ -17,11 +17,11 @@ export default async function handler(req, res) {
             holidayData['holiday_title'] = 'Week Off';
             holidayData['is_weekend'] = '1';
             holidayData['user_id'] = '410544b2-4001-4271-9855-fec4b6a6442a';
-            await dbUtils.insert('tbl_holiday',holidayData);
+            // await dbUtils.insert('tbl_holiday',holidayData);
         }
     }
-    return res.status(200).end('Hello Cron!');
-}
+    // return res.status(200).end('Hello Cron!');
+// }
 
 function getDefaultOffDays(year) {
     var date = new Date(year, 0, 1);
