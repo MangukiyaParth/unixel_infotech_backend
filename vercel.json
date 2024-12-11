@@ -16,7 +16,7 @@
         "path": "/api/cron",
         "schedule": "0 0 1 12 *"
     },{
-        "path": "/api/hello",
+        "path": "/hello",
         "schedule": "0 5 * * *"
     }]
 }
