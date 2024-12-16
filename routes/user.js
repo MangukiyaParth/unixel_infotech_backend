@@ -361,6 +361,7 @@ router.post('/login', upload.none(), [body('email', 'Enter a email').exists(),bo
                 };
                 const authtoken = jwt.sign(data, JWT_SECRET);
                 delete user.password;
+                user.authtoken = authtoken;
                 const res_data = {
                     user: user,
                     email: user.email,
