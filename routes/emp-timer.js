@@ -40,17 +40,18 @@ router.get('/monthly', fetchuser, upload.none(), [], async (req, res)=>{
     const curr_date = date.toLocaleDateString("en-CA").split('-');
     const curr_month = curr_date[0]+"-"+curr_date[1];
     try{
-        const timerData = await dbUtils.execute(`SELECT to_char(start_time, 'YYYY-MM-DD HH24:MI:SS') AS start_time, to_char(end_time, 'YYYY-MM-DD HH24:MI:SS') AS end_time, CASE WHEN action_type = 1 THEN false ELSE true END as is_break FROM tbl_employee_time WHERE user_id = '${id}' AND to_char(start_time, 'YYYY-MM') = '${curr_month}' AND end_time is not null ORDER BY start_time`);
+        const timerData = await dbUtils.execute(`SELECT to_char(start_time, 'YYYY-MM-DD HH24:MI:SS') AS start_time, 
+            to_char(end_time, 'YYYY-MM-DD HH24:MI:SS') AS end_time, 
+            total_time,
+            CASE WHEN action_type = 1 THEN false ELSE true END as is_break 
+            FROM tbl_employee_time 
+            WHERE user_id = '${id}' AND to_char(start_time, 'YYYY-MM') = '${curr_month}' AND end_time is not null ORDER BY start_time`);
         if(!timerData){
             return res.status(400).json({status:0, error: "Data not found."})
         }
         else 
         {
-            const statusData = await dbUtils.execute_single(`SELECT (SELECT action_type FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' ORDER BY entry_date DESC LIMIT 1) AS last_status,
-                (SELECT CASE WHEN (end_time is null) THEN 0 ELSE 1 END FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' ORDER BY entry_date DESC LIMIT 1) AS last_timer_status,
-                (SELECT SUM(ROUND(EXTRACT(EPOCH FROM (CASE WHEN (end_time is null) THEN now() ELSE end_time END - start_time)))) AS difference FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' AND action_type = 1) AS total_curr_time,
-                (SELECT SUM(ROUND(EXTRACT(EPOCH FROM (CASE WHEN (end_time is null) THEN now() ELSE end_time END - start_time)))) AS difference FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' AND action_type = 2) AS total_break_time`);
-            res.json({ status: 1, res_data: timerData, status_data: statusData});
+            res.json({ status: 1, res_data: timerData});
         }
 
     } catch (error){

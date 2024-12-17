@@ -267,6 +267,7 @@ async function seedSettings() {
                 notice text,
                 full_day_time integer,
                 half_day_time integer,
+                end_time VARCHAR(25),
                 entry_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP
             );
         `);
