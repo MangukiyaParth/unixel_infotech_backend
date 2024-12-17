@@ -43,7 +43,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
         const yearly_taken_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS yearly_leave 
                 FROM tbl_leave_dates ld
                 join tbl_leaves l on l.id = ld.leave_id
-                WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '2' AND l.leave_status != '2' AND
+                WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' AND
                 to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = '${curr_year}'`);
         let yearly_leave = yearly_taken_leave.yearly_leave || 0;
         const leave_cnt = {

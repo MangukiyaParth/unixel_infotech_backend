@@ -47,7 +47,7 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
             to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY')`);
             const used_yearly_leave = (yearly_taken_paid_leave && yearly_taken_paid_leave.yearly_leave) ? yearly_taken_paid_leave.yearly_leave : 0;
             if(used_yearly_leave >= yearly_leave_limit){
-                return res.status(400).json({ status:status, error: "Sorry! You have reached yearly Paid leave Limit ("+yearly_leave_limit+")"});
+                return res.status(400).json({ status:status, error: "Sorry! You have reached yearly Free leave Limit ("+yearly_leave_limit+")"});
             }
             else{
                 const monthly_leave = await dbUtils.execute_single(`SELECT free_leave_limit FROM tbl_settings LIMIT 1`);
@@ -60,7 +60,7 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
                     to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY-MM') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY-MM')`);
                 let used_monthly_leave = (monthly_taken_paid_leave && monthly_taken_paid_leave.monthly_leave) ? monthly_taken_paid_leave.monthly_leave : 0;
                 if(used_monthly_leave >= monthly_leave_limit){
-                    return res.status(400).json({ status:status, error: "Sorry! You have reached monthly Paid leave Limit ("+monthly_leave_limit+")"});
+                    return res.status(400).json({ status:status, error: "Sorry! You have reached monthly Free leave Limit ("+monthly_leave_limit+")"});
                 }
                 else{
                     const monthly_leave_balance = monthly_leave_limit - used_monthly_leave;
@@ -74,7 +74,7 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
                 applied_days += (val.leaveTime == '3') ? 1 : 0.5;
             }
             if(applied_days > remain_leave){
-                return res.status(400).json({ status:status, error: "Sorry! You have exceeded Paid leave Limit"});
+                return res.status(400).json({ status:status, error: "Sorry! You have exceeded Free leave Limit"});
             }
         }
         let leaveData = [];
@@ -144,7 +144,7 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
                 to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY')`);
                 const used_yearly_leave = (yearly_taken_paid_leave && yearly_taken_paid_leave.yearly_leave) ? yearly_taken_paid_leave.yearly_leave : 0;
                 if(used_yearly_leave >= yearly_leave_limit){
-                    return res.status(400).json({ status:status, error: "Sorry! You have reached yearly Paid leave Limit ("+yearly_leave_limit+")"});
+                    return res.status(400).json({ status:status, error: "Sorry! You have reached yearly Free leave Limit ("+yearly_leave_limit+")"});
                 }
                 else{
                     const monthly_leave = await dbUtils.execute_single(`SELECT free_leave_limit FROM tbl_settings LIMIT 1`);
@@ -157,7 +157,7 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
                         to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY-MM') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY-MM')`);
                     let used_monthly_leave = (monthly_taken_paid_leave && monthly_taken_paid_leave.monthly_leave) ? monthly_taken_paid_leave.monthly_leave : 0;
                     if(used_monthly_leave >= monthly_leave_limit){
-                        return res.status(400).json({ status:status, error: "Sorry! You have reached monthly Paid leave Limit ("+monthly_leave_limit+")"});
+                        return res.status(400).json({ status:status, error: "Sorry! You have reached monthly Free leave Limit ("+monthly_leave_limit+")"});
                     }
                     else{
                         const monthly_leave_balance = monthly_leave_limit - used_monthly_leave;
@@ -171,7 +171,7 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
                     applied_days += (val.leaveTime == '3') ? 1 : 0.5;
                 }
                 if(applied_days > remain_leave){
-                    return res.status(400).json({ status:status, error: "Sorry! You have exceeded Paid leave Limit"});
+                    return res.status(400).json({ status:status, error: "Sorry! You have exceeded Free leave Limit"});
                 }
             }
             let leaveData = [];
