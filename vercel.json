@@ -15,5 +15,9 @@
     "crons": [{
         "path": "/holiday-cron",
         "schedule": "0 0 1 12 *"
+    },
+    {
+        "path": "/timer-cron",
+        "schedule": "59 23 * * *"
     }]
 }
