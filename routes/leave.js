@@ -19,7 +19,7 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
                 const loopTime = val.leaveTime;
                 let extraWhere = "";
                 if(loopTime == 1 || loopTime == 2){
-                    extraWhere = ` AND ld.leave_time = '${loopTime}'`;
+                    extraWhere = ` AND (ld.leave_time = '${loopTime}' OR ld.leave_time = '3')`;
                 }
                 const user_leave = await dbUtils.execute_single(`SELECT ld.* FROM tbl_leave_dates ld 
                     JOIN tbl_leaves l ON l.id = ld.leave_id
@@ -116,7 +116,7 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
                     const loopTime = val.leaveTime;
                     let extraWhere = "";
                     if(loopTime == 1 || loopTime == 2){
-                        extraWhere = ` AND ld.leave_time = '${loopTime}'`;
+                        extraWhere = ` AND (ld.leave_time = '${loopTime}' OR ld.leave_time = '3')`;
                     }
                     const user_leave = await dbUtils.execute_single(`SELECT ld.* FROM tbl_leave_dates ld 
                         JOIN tbl_leaves l ON l.id = ld.leave_id
@@ -210,6 +210,7 @@ router.delete('/', fetchuser, upload.none(), [], async (req, res)=>{
         const leave = await dbUtils.execute(`SELECT id FROM tbl_leaves WHERE id = '${id}' AND user_id = '${req.user.id}'`);
         if(leave && id && id != "" && leave.length > 0) {
             await dbUtils.delete('tbl_leaves',`id = '${id}'`);
+            await dbUtils.delete('tbl_leave_dates',`leave_id = '${id}'`);
             status=1;
         }
         else {
