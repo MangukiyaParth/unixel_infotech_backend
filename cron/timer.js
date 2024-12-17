@@ -8,13 +8,11 @@ router.get('/', async (req, res)=>{
     let office_end_time = (settingData && settingData?.end_time) ? (settingData.end_time+":00.000000") : '18:00:00.000000';
     const timeData = await dbUtils.execute(`SELECT id, start_time, TO_CHAR(start_time, 'YYYY-MM-DD') AS only_date FROM tbl_employee_time WHERE end_time is null`);
     if(timeData){
-        console.log(timeData);
         timeData.map(async(data, index) => {
             let endTime = data.only_date + " " + office_end_time;
             let startDate = new Date(data.start_time);
             let endDate   = new Date(endTime);
             let seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-            console.log(seconds);
             let timeUpdateData = [];
             timeUpdateData['end_time'] = endTime;
             timeUpdateData['total_time'] = seconds;
