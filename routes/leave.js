@@ -11,6 +11,7 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
     const {leaveDate, leave_type, leave_description, start_date, end_date, dateData} = req.body;
     const { id } = req.user;
     try{
+        let already_added = false;
         if(dateData){
             const datesdata = JSON.parse(dateData);
             for(const val of datesdata) {
@@ -25,31 +26,37 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
                     WHERE ld.user_id = '${id}' AND l.leave_status != 2 ${extraWhere} AND
                     TO_DATE('${loopDate}','YYYY-MM-DD') = TO_DATE(ld.leave_date,'YYYY-MM-DD')`);
                 if(user_leave){
-                    return res.status(400).json({ status:status, error: "sorry you have already add leave for this time period"});
+                    // return res.status(400).json({ status:status, error: "sorry you have already add leave for this time period"});
+                    already_added = true;
+                    break;
                 }
             }
         }
 
-        if(leave_type == 2){
+        if(already_added){
+            return res.status(400).json({ status:status, error: "sorry you have already add leave for this time period"});
+        }
+
+        if(leave_type == 1){
             const yearly_leave_limit = 12;
             let remain_leave = 0;
             const yearly_taken_paid_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS yearly_leave 
             FROM tbl_leave_dates ld
             join tbl_leaves l on l.id = ld.leave_id
-            WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '2' AND l.leave_status != '2' AND
+            WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' AND
             to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY')`);
             const used_yearly_leave = (yearly_taken_paid_leave && yearly_taken_paid_leave.yearly_leave) ? yearly_taken_paid_leave.yearly_leave : 0;
             if(used_yearly_leave >= yearly_leave_limit){
                 return res.status(400).json({ status:status, error: "Sorry! You have reached yearly Paid leave Limit ("+yearly_leave_limit+")"});
             }
             else{
-                const monthly_leave = await dbUtils.execute_single(`SELECT paid_leave_limit FROM tbl_settings LIMIT 1`);
-                const monthly_leave_limit = monthly_leave.paid_leave_limit;
+                const monthly_leave = await dbUtils.execute_single(`SELECT free_leave_limit FROM tbl_settings LIMIT 1`);
+                const monthly_leave_limit = monthly_leave.free_leave_limit;
 
                 const monthly_taken_paid_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS monthly_leave 
                     FROM tbl_leave_dates ld
                     join tbl_leaves l on l.id = ld.leave_id
-                    WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '2' AND l.leave_status != '2' AND
+                    WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' AND
                     to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY-MM') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY-MM')`);
                 let used_monthly_leave = (monthly_taken_paid_leave && monthly_taken_paid_leave.monthly_leave) ? monthly_taken_paid_leave.monthly_leave : 0;
                 if(used_monthly_leave >= monthly_leave_limit){
@@ -101,7 +108,7 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
         let status = 0;
         const {leaveDate, leave_type, leave_description, start_date, end_date, dateData, id} = req.body;
         try{
-            
+            let already_added = false;
             if(dateData){
                 const datesdata = JSON.parse(dateData);
                 for(const val of datesdata) {
@@ -116,30 +123,37 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
                         WHERE ld.user_id = '${id}' AND ld.leave_id != '${id}' AND l.leave_status != 2 ${extraWhere} AND
                         TO_DATE('${loopDate}','YYYY-MM-DD') = TO_DATE(ld.leave_date,'YYYY-MM-DD')`);
                     if(user_leave){
-                        return res.status(400).json({ status:status, error: "sorry you have already add leave for this time period"});
+                        // return res.status(400).json({ status:status, error: "sorry you have already add leave for this time period"});
+                        already_added = true;
+                        break;
                     }
                 }
             }
-            if(leave_type == 2){
+
+            if(already_added){
+                return res.status(400).json({ status:status, error: "sorry you have already add leave for this time period"});
+            }
+
+            if(leave_type == 1){
                 const yearly_leave_limit = 12;
                 let remain_leave = 0;
                 const yearly_taken_paid_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS yearly_leave 
                 FROM tbl_leave_dates ld
                 join tbl_leaves l on l.id = ld.leave_id
-                WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '2' AND l.leave_status != '2' AND ld.leave_id != '${id}'  AND
+                WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' AND ld.leave_id != '${id}'  AND
                 to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY')`);
                 const used_yearly_leave = (yearly_taken_paid_leave && yearly_taken_paid_leave.yearly_leave) ? yearly_taken_paid_leave.yearly_leave : 0;
                 if(used_yearly_leave >= yearly_leave_limit){
                     return res.status(400).json({ status:status, error: "Sorry! You have reached yearly Paid leave Limit ("+yearly_leave_limit+")"});
                 }
                 else{
-                    const monthly_leave = await dbUtils.execute_single(`SELECT paid_leave_limit FROM tbl_settings LIMIT 1`);
-                    const monthly_leave_limit = monthly_leave.paid_leave_limit;
+                    const monthly_leave = await dbUtils.execute_single(`SELECT free_leave_limit FROM tbl_settings LIMIT 1`);
+                    const monthly_leave_limit = monthly_leave.free_leave_limit;
 
                     const monthly_taken_paid_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS monthly_leave 
                         FROM tbl_leave_dates ld
                         join tbl_leaves l on l.id = ld.leave_id
-                        WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '2' AND l.leave_status != '2' AND ld.leave_id != '${id}' AND
+                        WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' AND ld.leave_id != '${id}' AND
                         to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY-MM') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY-MM')`);
                     let used_monthly_leave = (monthly_taken_paid_leave && monthly_taken_paid_leave.monthly_leave) ? monthly_taken_paid_leave.monthly_leave : 0;
                     if(used_monthly_leave >= monthly_leave_limit){
@@ -162,7 +176,7 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
             }
             let leaveData = [];
             leaveData['leave_date'] = leaveDate;
-            leaveData['leave_type'] = (start_date != end_date) ? "3" : leave_type;
+            leaveData['leave_type'] = leave_type;
             leaveData['description'] = leave_description;
             leaveData['start_date'] = start_date;
             leaveData['end_date'] = end_date;
@@ -227,7 +241,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
             extraWhere = " l.user_id = '"+req.user.id+"' AND ";
         }
         const account = await dbUtils.execute(`SELECT l.*, u.name, 
-            CASE WHEN (l.leave_type = '1') THEN 'Casual Leave' ELSE 'Paid Leave' END AS leave_type_text,
+            CASE WHEN (l.leave_type = '1') THEN 'Free Leave' ELSE 'Paid Leave' END AS leave_type_text,
             CASE WHEN (l.leave_status = '1') THEN 'Approved' WHEN (l.leave_status = '2') THEN 'Rejected' ELSE 'Pending' END AS leave_status_text, 
             CASE WHEN (l.leave_status = '1') THEN 'green' WHEN (l.leave_status = '2') THEN 'red' ELSE 'yellow' END AS leave_status_color  
             FROM tbl_leaves l
@@ -235,7 +249,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
             WHERE ${extraWhere}
                 (
                     u.name LIKE '${`%${search}%`}' OR
-                    CASE WHEN (l.leave_type = '1') THEN 'Casual Leave' ELSE 'Paid Leave' END LIKE '${`%${search}%`}' OR
+                    CASE WHEN (l.leave_type = '1') THEN 'Free Leave' ELSE 'Paid Leave' END LIKE '${`%${search}%`}' OR
                     CASE WHEN (l.leave_status = '1') THEN 'Approved' WHEN (l.leave_status = '2') THEN 'Rejected' ELSE 'Pending' END LIKE '${`%${search}%`}' OR
                     l.leave_date LIKE '${`%${search}%`}'
                 )
@@ -253,7 +267,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
             WHERE ${extraWhere}
                 (
                     u.name LIKE '${`%${search}%`}' OR
-                    CASE WHEN (l.leave_type = '1') THEN 'Casual Leave' ELSE 'Paid Leave' END LIKE '${`%${search}%`}' OR
+                    CASE WHEN (l.leave_type = '1') THEN 'Free Leave' ELSE 'Paid Leave' END LIKE '${`%${search}%`}' OR
                     CASE WHEN (l.leave_status = '1') THEN 'Approved' WHEN (l.leave_status = '2') THEN 'Rejected' ELSE 'Pending' END LIKE '${`%${search}%`}' OR
                     l.leave_date LIKE '${`%${search}%`}'
                 )`);
@@ -306,8 +320,8 @@ router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
     }
 });
 
-// Get paid leave count
-router.get('/paid-count', fetchuser, upload.none(), [], async (req, res)=>{
+// Get free leave count
+router.get('/free-count', fetchuser, upload.none(), [], async (req, res)=>{
 	let { id, startDate } = req.query;
     const date = new Date(decodeURI(startDate));
     const curr_year = date.getFullYear();
@@ -325,20 +339,20 @@ router.get('/paid-count', fetchuser, upload.none(), [], async (req, res)=>{
         const yearly_taken_paid_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS yearly_leave 
                 FROM tbl_leave_dates ld
                 join tbl_leaves l on l.id = ld.leave_id
-                WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '2' AND l.leave_status != '2' ${where} AND
+                WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' ${where} AND
                 to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = '${curr_year}'`);
         const used_yearly_leave = (yearly_taken_paid_leave && yearly_taken_paid_leave.yearly_leave) ? yearly_taken_paid_leave.yearly_leave : 0;
         if(used_yearly_leave >= yearly_leave_limit){
             res.json({ status: 1, res_data: resp});
         }
         else{
-            const monthly_leave = await dbUtils.execute_single(`SELECT paid_leave_limit FROM tbl_settings LIMIT 1`);
-            const monthly_leave_limit = monthly_leave.paid_leave_limit;
+            const monthly_leave = await dbUtils.execute_single(`SELECT free_leave_limit FROM tbl_settings LIMIT 1`);
+            const monthly_leave_limit = monthly_leave.free_leave_limit;
 
             const monthly_taken_paid_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS monthly_leave 
                 FROM tbl_leave_dates ld
                 join tbl_leaves l on l.id = ld.leave_id
-                WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '2' AND l.leave_status != '2' ${where} AND
+                WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' ${where} AND
                 to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY-MM') = '${curr_month}'`);
             let used_monthly_leave = (monthly_taken_paid_leave && monthly_taken_paid_leave.monthly_leave) ? monthly_taken_paid_leave.monthly_leave : 0;
             if(used_monthly_leave >= monthly_leave_limit){
@@ -347,7 +361,8 @@ router.get('/paid-count', fetchuser, upload.none(), [], async (req, res)=>{
             else{
                 const monthly_leave_balance = monthly_leave_limit - used_monthly_leave;
                 const yearly_leave_balance = yearly_leave_limit - used_yearly_leave;
-                resp.remain_leave = ((monthly_leave_balance) < (yearly_leave_balance)) ? monthly_leave_balance : yearly_leave_balance;
+                // resp.remain_leave = ((monthly_leave_balance) < (yearly_leave_balance)) ? monthly_leave_balance : yearly_leave_balance;
+                resp.remain_leave = yearly_leave_balance;
                 res.json({ status: 1, res_data: resp});
             }
 

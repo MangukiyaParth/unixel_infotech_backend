@@ -26,13 +26,13 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
 // Update setting 
 router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
-    const { late_time, notice, paid_leave_limit, full_day_time, half_day_time } = req.body;
+    const { late_time, notice, free_leave_limit, full_day_time, half_day_time } = req.body;
     try{
         await dbUtils.execute('TRUNCATE tbl_settings');
         let settingData = [];
         settingData['late_time'] = late_time;
         settingData['notice'] = notice;
-        settingData['paid_leave_limit'] = paid_leave_limit;
+        settingData['free_leave_limit'] = free_leave_limit;
         settingData['full_day_time'] = full_day_time;
         settingData['half_day_time'] = half_day_time;
         await dbUtils.insert('tbl_settings',settingData);

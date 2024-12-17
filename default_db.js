@@ -263,7 +263,7 @@ async function seedSettings() {
             (
                 id uuid DEFAULT uuid_generate_v4() PRIMARY KEY UNIQUE,
                 late_time VARCHAR(25),
-                paid_leave_limit integer,
+                free_leave_limit integer,
                 notice text,
                 full_day_time integer,
                 half_day_time integer,
