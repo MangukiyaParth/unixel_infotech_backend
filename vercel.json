@@ -19,5 +19,6 @@
     {
         "path": "/timer-cron",
         "schedule": "59 23 * * *"
-    }]
+    }],
+    "regions": ["bom1"]
 }
