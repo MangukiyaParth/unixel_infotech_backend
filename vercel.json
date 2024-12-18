@@ -18,7 +18,7 @@
     },
     {
         "path": "/timer-cron",
-        "schedule": "59 23 * * *"
+        "schedule": "29 18 * * *"
     }],
     "regions": ["bom1"]
 }
