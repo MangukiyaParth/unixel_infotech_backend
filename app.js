@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
     res.json({ message: 'Hello from Node.js backend!' });
 });
 
-
+process.env.TZ = 'Asia/Kolkata';
 // Available Routes
 app.use('/api/v1/user', require('./routes/user'));
 app.use('/api/v1/general', require('./routes/general'));
