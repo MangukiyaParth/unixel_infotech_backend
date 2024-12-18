@@ -18,6 +18,7 @@ async function execute_query(query)
 {
     try {
         const client = await pool.connect();
+        await client.query("SET TIME ZONE 'IST'");
         let qry_res = await client.query(query);
         client.release();
         return qry_res?.rows;
