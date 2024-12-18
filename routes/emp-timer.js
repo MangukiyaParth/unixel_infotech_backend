@@ -10,6 +10,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
 	let { id } = req.user;
     
     let status = 0;
+    process.env.TZ = 'Asia/Kolkata';
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA");
     try{
@@ -36,6 +37,7 @@ router.get('/monthly', fetchuser, upload.none(), [], async (req, res)=>{
 	let { id } = req.user;
     
     let status = 0;
+    process.env.TZ = 'Asia/Kolkata';
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA").split('-');
     const curr_month = curr_date[0]+"-"+curr_date[1];
@@ -61,8 +63,9 @@ router.get('/monthly', fetchuser, upload.none(), [], async (req, res)=>{
 
 // Add employee time
 router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
-	const { currStatus } = req.body;
+    const { currStatus } = req.body;
     const { id } = req.user;
+    process.env.TZ = 'Asia/Kolkata';
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA");
     let status = 0;
@@ -77,9 +80,9 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
                 (SELECT full_day_time*60 FROM tbl_settings LIMIT 1) AS full_day_time,
                 (SELECT half_day_time*60 FROM tbl_settings LIMIT 1) AS half_day_time,
                 COALESCE((SELECT ld.leave_time FROM tbl_leave_dates ld join tbl_leaves l ON l.id = ld.leave_id where l.leave_status = 1 AND ld.user_id = '${id}' AND ld.leave_date = '${curr_date}'),'0') AS leave_type`);
-            if((totalTimeData.full_day_time > totalTimeData.total_time && totalTimeData.leave_type == '0') || 
+                if((totalTimeData.full_day_time > totalTimeData.total_time && totalTimeData.leave_type == '0') || 
                 ((totalTimeData.leave_type == 1 || totalTimeData.leave_type == 2) && totalTimeData.half_day_time > totalTimeData.total_time)){
-                askReason = true;
+                    askReason = true;
             }
             else{
                 updateEndTime = true;
@@ -96,6 +99,7 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
         }
 
         if(account && updateEndTime){
+            process.env.TZ = 'Asia/Kolkata';
             var startDate = new Date(account.start_time);
             var endDate   = new Date();
             var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
@@ -105,7 +109,7 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
             await dbUtils.update('tbl_employee_time', time_update, "id='"+account.id+"'");
         }
         res.json({ status: 1, message: 'success', askReason: askReason});
-
+        
     } catch (error){
         res.status(500).json({ status:status, error: "Internal server error"});
     }
@@ -113,14 +117,16 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
 
 // Add employee clockout
 router.put('/clockout', fetchuser, upload.none(), [], async (req, res)=>{
-	const { reason } = req.body;
+    const { reason } = req.body;
     const { id } = req.user;
+    process.env.TZ = 'Asia/Kolkata';
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA");
     let status = 0;
     try{
         const account = await dbUtils.execute_single(`SELECT id, start_time FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' AND end_time is null ORDER BY entry_date DESC LIMIT 1`);
         if(account){
+            process.env.TZ = 'Asia/Kolkata';
             var startDate = new Date(account.start_time);
             var endDate   = new Date();
             var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
@@ -131,6 +137,32 @@ router.put('/clockout', fetchuser, upload.none(), [], async (req, res)=>{
             await dbUtils.update('tbl_employee_time', time_update, "id='"+account.id+"'");
         }
         res.json({ status: 1, message: 'success'});
+        
+    } catch (error){
+        res.status(500).json({ status:status, error: "Internal server error"});
+    }
+});
+
+// Get User monthly time
+router.get('/details', fetchuser, upload.none(), [], async (req, res)=>{
+    let { empId, date } = req.query;
+    
+    let status = 0;
+    const timer_date = new Date(decodeURI(date));
+    const curr_date = timer_date.toLocaleDateString("en-CA");
+    try{
+        const timerData = await dbUtils.execute(`SELECT to_char(start_time, 'HH:MI:SS AM') AS start_time, 
+            to_char(end_time, 'HH:MI:SS AM') AS end_time, 
+            total_time, action_type
+            FROM tbl_employee_time 
+            WHERE user_id = '${empId}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' ORDER BY start_time`);
+        if(!timerData){
+            return res.status(400).json({status:0, error: "Data not found."})
+        }
+        else 
+        {
+            res.json({ status: 1, res_data: timerData});
+        }
 
     } catch (error){
         res.status(500).json({ status:status, error: "Internal server error"});

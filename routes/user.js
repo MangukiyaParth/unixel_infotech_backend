@@ -421,4 +421,28 @@ router.put('/profile', fetchuser, upload.none(), [], async (req, res)=>{
     }
 });
 
+// Get User Type
+router.get('/employee', fetchuser, upload.none(), [], async (req, res)=>{
+	let status = 0;
+	try{
+		const users = await dbUtils.execute(`SELECT
+                u.id,
+                et.employeetype,
+                u.name
+            FROM tbl_users u
+            LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
+            WHERE u.usertype = '${process.env.NEXT_PUBLIC_EMPUTYPE}'`);
+        if(!users){
+            return res.status(400).json({status:0, error: "User not found."})
+        }
+        else 
+        {
+            res.json({ status: 1, res_data: users});
+        }
+
+	} catch (error){
+		res.status(500).json({ status:status, error: "Internal server error"});
+	}
+})
+
 module.exports = router;
