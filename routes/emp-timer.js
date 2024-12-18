@@ -145,11 +145,11 @@ router.get('/details', fetchuser, upload.none(), [], async (req, res)=>{
     const timer_date = new Date(decodeURI(date));
     const curr_date = timer_date.toLocaleDateString("en-CA");
     try{
-        const timerData = await dbUtils.execute(`SELECT to_char(start_time, 'HH:MI AM') AS start_time, 
+        const timerData = await dbUtils.execute(`SELECT start_time AS stime, to_char(start_time, 'HH:MI AM') AS start_time, 
             to_char(end_time, 'HH:MI AM') AS end_time, 
             total_time, action_type
             FROM tbl_employee_time 
-            WHERE user_id = '${empId}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' ORDER BY start_time`);
+            WHERE user_id = '${empId}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' ORDER BY stime`);
         if(!timerData){
             return res.status(400).json({status:0, error: "Data not found."})
         }
