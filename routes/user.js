@@ -424,14 +424,19 @@ router.put('/profile', fetchuser, upload.none(), [], async (req, res)=>{
 // Get User Type
 router.get('/employee', fetchuser, upload.none(), [], async (req, res)=>{
 	let status = 0;
+    const { roleId, id } = req.user;
 	try{
+        let extraWhere = "";
+        if(roleId == process.env.NEXT_PUBLIC_EMPUTYPE){
+            extraWhere = ` AND u.id = '${id}' `;
+        }
 		const users = await dbUtils.execute(`SELECT
                 u.id,
                 et.employeetype,
                 u.name
             FROM tbl_users u
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
-            WHERE u.usertype = '${process.env.NEXT_PUBLIC_EMPUTYPE}'`);
+            WHERE u.usertype = '${process.env.NEXT_PUBLIC_EMPUTYPE}' ${extraWhere}`);
         if(!users){
             return res.status(400).json({status:0, error: "User not found."})
         }
