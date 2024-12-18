@@ -10,7 +10,6 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
 	let { id } = req.user;
     
     let status = 0;
-    process.env.TZ = 'Asia/Kolkata';
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA");
     try{
@@ -37,7 +36,6 @@ router.get('/monthly', fetchuser, upload.none(), [], async (req, res)=>{
 	let { id } = req.user;
     
     let status = 0;
-    process.env.TZ = 'Asia/Kolkata';
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA").split('-');
     const curr_month = curr_date[0]+"-"+curr_date[1];
@@ -65,7 +63,6 @@ router.get('/monthly', fetchuser, upload.none(), [], async (req, res)=>{
 router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
     const { currStatus } = req.body;
     const { id } = req.user;
-    // process.env.TZ = 'Asia/Kolkata';
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA");
     let status = 0;
@@ -99,7 +96,6 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
         }
 
         if(account && updateEndTime){
-            process.env.TZ = 'Asia/Kolkata';
             var startDate = new Date(account.start_time);
             var endDate   = new Date();
             var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
@@ -119,14 +115,12 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
 router.put('/clockout', fetchuser, upload.none(), [], async (req, res)=>{
     const { reason } = req.body;
     const { id } = req.user;
-    process.env.TZ = 'Asia/Kolkata';
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA");
     let status = 0;
     try{
         const account = await dbUtils.execute_single(`SELECT id, start_time FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' AND end_time is null ORDER BY entry_date DESC LIMIT 1`);
         if(account){
-            process.env.TZ = 'Asia/Kolkata';
             var startDate = new Date(account.start_time);
             var endDate   = new Date();
             var seconds = (endDate.getTime() - startDate.getTime()) / 1000;

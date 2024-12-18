@@ -8,7 +8,6 @@ const upload = multer();
 // Get User time by Id
 router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
-    process.env.TZ = 'Asia/Kolkata';
     const curr_date = new Date();
 
     let curr_month = ""+(curr_date.getMonth() + 1);
