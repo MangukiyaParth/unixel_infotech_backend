@@ -159,7 +159,7 @@ router.get('/details', fetchuser, upload.none(), [], async (req, res)=>{
             CASE WHEN (th.status = '1') THEN 'green' WHEN (th.status = '2') THEN 'red' WHEN (th.status = '0') THEN 'yellow' ELSE 'NONE' END AS status_color  
             FROM tbl_employee_time et
             left join tbl_employee_time_history th ON et.id = th.time_id AND th.is_latest = 1
-            WHERE et.user_id = '${empId}' AND to_char(et.start_time, 'YYYY-MM-DD') = '${curr_date}' ORDER BY stime`);
+            WHERE et.user_id = '${empId}' AND to_char(et.start_time, 'YYYY-MM-DD') = '${curr_date}' ORDER BY et.entry_date`);
         if(!timerData){
             return res.status(400).json({status:0, error: "Data not found."})
         }
@@ -227,13 +227,13 @@ router.put('/manage', fetchuser, upload.none(), [], async (req, res)=>{
 
                 const idData = await dbUtils.execute_single(`SELECT
                     (SELECT id FROM tbl_employee_time 
-                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY end_time DESC LIMIT 1) AS prev_timer_id,
+                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_timer_id,
                     (SELECT TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
-                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY end_time DESC LIMIT 1) AS prev_start_time,
+                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_start_time,
                     (SELECT id FROM tbl_employee_time 
-                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY start_time ASC LIMIT 1) AS next_timer_id,
+                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_timer_id,
                     (SELECT TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
-                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY start_time ASC LIMIT 1) AS next_end_time`); 
+                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_end_time`); 
                 if(idData.prev_timer_id){
                     var startDate = new Date(idData.prev_start_time);
                     var endDate = new Date(start_date);
@@ -318,13 +318,13 @@ router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
 
                     const idData = await dbUtils.execute_single(`SELECT
                         (SELECT id FROM tbl_employee_time 
-                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY end_time DESC LIMIT 1) AS prev_timer_id,
+                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_timer_id,
                         (SELECT TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
-                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY end_time DESC LIMIT 1) AS prev_start_time,
+                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_start_time,
                         (SELECT id FROM tbl_employee_time 
-                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY start_time ASC LIMIT 1) AS next_timer_id,
+                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_timer_id,
                         (SELECT TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
-                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY start_time ASC LIMIT 1) AS next_end_time`); 
+                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_end_time`); 
                     if(idData.prev_timer_id){
                         var startDate = new Date(idData.prev_start_time);
                         var endDate = new Date(historyData.start_time_format);
