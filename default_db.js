@@ -149,6 +149,7 @@ async function seedEmployeeTime() {
                 updated_end_time timestamp without time zone,
                 reason text,
                 status integer DEFAULT 0,
+                status_description text,
                 is_latest integer DEFAULT 1
             );
         `);
