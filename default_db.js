@@ -130,14 +130,34 @@ async function seedEmployeeTime() {
                 start_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
                 total_time numeric NOT NULL DEFAULT 0,
                 end_time timestamp without time zone,
-                reason text
+                reason text,
+                is_updated integer DEFAULT 0
+            );
+        `);
+        const createTable2 = await pool.query(`
+            CREATE TABLE IF NOT EXISTS tbl_employee_time_history
+            (
+                id UUID DEFAULT uuid_generate_v4() PRIMARY KEY UNIQUE,
+                time_id uuid,
+                user_id uuid,
+                entry_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+                action_type integer DEFAULT 1,
+                start_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+                end_time timestamp without time zone,
+                total_time numeric NOT NULL DEFAULT 0,
+                updated_start_time timestamp without time zone,
+                updated_end_time timestamp without time zone,
+                reason text,
+                status integer DEFAULT 0,
+                is_latest integer DEFAULT 1
             );
         `);
 
         console.log(`Created "tbl_employee_time" table`);
 
         return {
-            createTable
+            createTable,
+            createTable2
         };
     } catch (error) {
         console.error('Error seeding employee time:', error);
