@@ -237,7 +237,8 @@ router.put('/manage', fetchuser, upload.none(), [], async (req, res)=>{
                 if(idData.prev_timer_id){
                     var startDate = new Date(idData.prev_start_time);
                     var endDate = new Date(start_date);
-                    var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+                    let seconds = 0;
+                    if(start_date && idData.prev_start_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
                     let time_update = [];
                     time_update['end_time'] = start_date;
                     time_update['total_time'] = seconds;
@@ -246,7 +247,8 @@ router.put('/manage', fetchuser, upload.none(), [], async (req, res)=>{
                 if(idData.next_timer_id){
                     var startDate = new Date(end_date);
                     var endDate   = new Date(idData.next_end_time);
-                    var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+                    let seconds = 0;
+                    if(end_date && idData.next_end_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
                     let time_update = [];
                     time_update['start_time'] = end_date;
                     time_update['total_time'] = seconds;
@@ -326,7 +328,8 @@ router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
                     if(idData.prev_timer_id){
                         var startDate = new Date(idData.prev_start_time);
                         var endDate = new Date(historyData.start_time_format);
-                        var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+                        let seconds = 0;
+                        if(historyData.start_time_format && idData.prev_start_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
                         let time_update = [];
                         time_update['end_time'] = historyData.start_time_format;
                         time_update['total_time'] = seconds;
@@ -335,7 +338,8 @@ router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
                     if(idData.next_timer_id){
                         var startDate = new Date(historyData.end_time_format);
                         var endDate   = new Date(idData.next_end_time);
-                        var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+                        let seconds = 0;
+                        if(historyData.end_time_format && idData.next_end_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
                         let time_update = [];
                         time_update['start_time'] = historyData.end_time_format;
                         time_update['total_time'] = seconds;
