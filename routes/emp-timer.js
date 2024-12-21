@@ -185,75 +185,91 @@ router.put('/manage', fetchuser, upload.none(), [], async (req, res)=>{
         var endDate   = new Date(end_date);
         var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
         if(timer_id){
-            const oldData = await dbUtils.execute_single(`SELECT *, TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') AS start_time_format, TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') AS end_time_format FROM tbl_employee_time WHERE id = '${timer_id}'`);
-            
-            // Manage History
-            const historyData = await dbUtils.execute_single(`SELECT id FROM tbl_employee_time_history WHERE status != '1' AND time_id = '${timer_id}' ORDER BY entry_date DESC LIMIT 1`);
-            if(historyData){
-                let history_time_update = [];
-                history_time_update['updated_start_time'] = start_date;
-                history_time_update['updated_end_time'] = end_date;
-                await dbUtils.update('tbl_employee_time_history', history_time_update, "id='"+historyData.id+"'");
+            const timerData = await dbUtils.execute_single(`SELECT * FROM tbl_employee_time 
+                WHERE user_id = '${timer_user}' 
+                AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' 
+                AND id != '${timer_id}' 
+                AND
+                (
+                    (start_time > timestamp '${start_date}' AND start_time <= (SELECT start_time FROM tbl_employee_time WHERE id = '${timer_id}'))
+                    OR
+                    (end_time < timestamp '${end_date}' AND end_time >= (SELECT end_time FROM tbl_employee_time WHERE id = '${timer_id}'))
+                )`);
+            if(timerData){
+                res.status(500).json({ status:status, message: "Time already added in this time period"});
             }
             else{
-                let history_time_update = [];
-                history_time_update['is_latest'] = '0';
-                await dbUtils.update('tbl_employee_time_history', history_time_update, "time_id='"+oldData.id+"'");
+                const oldData = await dbUtils.execute_single(`SELECT *, TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') AS start_time_format, TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') AS end_time_format FROM tbl_employee_time WHERE id = '${timer_id}'`);
+                
+                // Manage History
+                const historyData = await dbUtils.execute_single(`SELECT id FROM tbl_employee_time_history WHERE status != '1' AND time_id = '${timer_id}' ORDER BY entry_date DESC LIMIT 1`);
+                if(historyData){
+                    let history_time_update = [];
+                    history_time_update['updated_start_time'] = start_date;
+                    history_time_update['updated_end_time'] = end_date;
+                    await dbUtils.update('tbl_employee_time_history', history_time_update, "id='"+historyData.id+"'");
+                }
+                else{
+                    let history_time_update = [];
+                    history_time_update['is_latest'] = '0';
+                    await dbUtils.update('tbl_employee_time_history', history_time_update, "time_id='"+oldData.id+"'");
 
-                let history_time_insert = [];
-                history_time_insert['time_id'] = oldData.id;
-                history_time_insert['start_time'] = oldData.start_time_format;
-                history_time_insert['end_time'] = oldData.end_time_format;
-                history_time_insert['total_time'] = oldData.total_time;
-                history_time_insert['updated_start_time'] = start_date;
-                history_time_insert['updated_end_time'] = end_date;
-                history_time_insert['user_id'] = oldData.user_id;
-                history_time_insert['action_type'] = oldData.action_type;
-                history_time_insert['reason'] = oldData.reason;
+                    let history_time_insert = [];
+                    history_time_insert['time_id'] = oldData.id;
+                    history_time_insert['start_time'] = oldData.start_time_format;
+                    history_time_insert['end_time'] = oldData.end_time_format;
+                    history_time_insert['total_time'] = oldData.total_time;
+                    history_time_insert['updated_start_time'] = start_date;
+                    history_time_insert['updated_end_time'] = end_date;
+                    history_time_insert['user_id'] = oldData.user_id;
+                    history_time_insert['action_type'] = oldData.action_type;
+                    history_time_insert['reason'] = oldData.reason;
+                    if(roleId == process.env.NEXT_PUBLIC_MAINUTYPE){
+                        history_time_insert['status'] = '1';
+                    }
+                    await dbUtils.insert('tbl_employee_time_history', history_time_insert);
+                }
+                
+                // Manage Emplyee Time
                 if(roleId == process.env.NEXT_PUBLIC_MAINUTYPE){
-                    history_time_insert['status'] = '1';
-                }
-                await dbUtils.insert('tbl_employee_time_history', history_time_insert);
-            }
-            
-            // Manage Emplyee Time
-            if(roleId == process.env.NEXT_PUBLIC_MAINUTYPE){
-                let time_update = [];
-                time_update['start_time'] = start_date;
-                time_update['end_time'] = end_date;
-                time_update['total_time'] = seconds;
-                time_update['is_updated'] = '1';
-                await dbUtils.update('tbl_employee_time', time_update, "id='"+timer_id+"'");
+                    let time_update = [];
+                    time_update['start_time'] = start_date;
+                    time_update['end_time'] = end_date;
+                    time_update['total_time'] = seconds;
+                    time_update['is_updated'] = '1';
+                    await dbUtils.update('tbl_employee_time', time_update, "id='"+timer_id+"'");
 
-                const idData = await dbUtils.execute_single(`SELECT
-                    (SELECT id FROM tbl_employee_time 
-                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_timer_id,
-                    (SELECT TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
-                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_start_time,
-                    (SELECT id FROM tbl_employee_time 
-                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_timer_id,
-                    (SELECT TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
-                        WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_end_time`); 
-                if(idData.prev_timer_id){
-                    var startDate = new Date(idData.prev_start_time);
-                    var endDate = new Date(start_date);
-                    let seconds = 0;
-                    if(start_date && idData.prev_start_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-                    let time_update = [];
-                    time_update['end_time'] = start_date;
-                    time_update['total_time'] = seconds;
-                    await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.prev_timer_id+"'");
+                    const idData = await dbUtils.execute_single(`SELECT
+                        (SELECT id FROM tbl_employee_time 
+                            WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_timer_id,
+                        (SELECT TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
+                            WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_start_time,
+                        (SELECT id FROM tbl_employee_time 
+                            WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_timer_id,
+                        (SELECT TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
+                            WHERE user_id = '${timer_user}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_end_time`); 
+                    if(idData.prev_timer_id){
+                        var startDate = new Date(idData.prev_start_time);
+                        var endDate = new Date(start_date);
+                        let seconds = 0;
+                        if(start_date && idData.prev_start_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+                        let time_update = [];
+                        time_update['end_time'] = start_date;
+                        time_update['total_time'] = seconds;
+                        await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.prev_timer_id+"'");
+                    }
+                    if(idData.next_timer_id){
+                        var startDate = new Date(end_date);
+                        var endDate   = new Date(idData.next_end_time);
+                        let seconds = 0;
+                        if(end_date && idData.next_end_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+                        let time_update = [];
+                        time_update['start_time'] = end_date;
+                        time_update['total_time'] = seconds;
+                        await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.next_timer_id+"'");
+                    }
                 }
-                if(idData.next_timer_id){
-                    var startDate = new Date(end_date);
-                    var endDate   = new Date(idData.next_end_time);
-                    let seconds = 0;
-                    if(end_date && idData.next_end_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-                    let time_update = [];
-                    time_update['start_time'] = end_date;
-                    time_update['total_time'] = seconds;
-                    await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.next_timer_id+"'");
-                }
+                res.json({ status: 1, res_data: timerData, message: 'success'});
             }
         }
         else{
@@ -277,10 +293,9 @@ router.put('/manage', fetchuser, upload.none(), [], async (req, res)=>{
                 time_insert['action_type'] = '1';
                 time_insert['is_updated'] = '1';
                 await dbUtils.insert('tbl_employee_time', time_insert);
+                res.json({ status: 1, message: 'success'});
             }
         }
-        res.json({ status: 1, message: 'success'});
-        
     } catch (error){
         console.log(error);
         res.status(500).json({ status:status, message: "Internal server error"});
@@ -292,62 +307,92 @@ router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const {modalId, modalStatus, rejectDescription} = req.body;
     try{
-        const oldData = await dbUtils.execute_single(`SELECT *, TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') AS start_time_format, TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') AS end_time_format FROM tbl_employee_time WHERE id = '${modalId}'`);
+        const oldData = await dbUtils.execute_single(`SELECT *, TO_CHAR(start_time,'YYYY-MM-DD') AS timer_date, 
+            TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') AS start_time_format, 
+            TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') AS end_time_format 
+            FROM tbl_employee_time 
+            WHERE id = '${modalId}'`);
         if(oldData){
             // Manage History
             const historyData = await dbUtils.execute_single(`SELECT id, TO_CHAR(updated_start_time,'YYYY-MM-DD HH24:MI:SS') AS start_time_format, TO_CHAR(updated_end_time,'YYYY-MM-DD HH24:MI:SS') AS end_time_format 
                 FROM tbl_employee_time_history WHERE status != '1' AND time_id = '${modalId}' ORDER BY entry_date DESC LIMIT 1`);
             if(historyData){
-                let history_time_update = [];
-                history_time_update['status'] = modalStatus;
-                history_time_update['status_description'] = rejectDescription ? rejectDescription : '';
-                await dbUtils.update('tbl_employee_time_history', history_time_update, "id='"+historyData.id+"'");
+                const timer_date = oldData.timer_date;
+                const timerData = await dbUtils.execute_single(`SELECT * FROM tbl_employee_time 
+                    WHERE user_id = '${oldData.user_id}' 
+                    AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' 
+                    AND id != '${modalId}' 
+                    AND
+                    (
+                        (start_time > timestamp '${historyData.start_time_format}' AND start_time <= (SELECT start_time FROM tbl_employee_time WHERE id = '${modalId}'))
+                        OR
+                        (end_time < timestamp '${historyData.end_time_format}' AND end_time >= (SELECT end_time FROM tbl_employee_time WHERE id = '${modalId}'))
+                    )`);
                 
-                if(modalStatus == '1'){
-                    var startDate = new Date(historyData.start_time_format);
-                    var endDate   = new Date(historyData.end_time_format);
-                    var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-                    const timer_date = startDate.toLocaleDateString("en-CA");
+                if(modalStatus != '1'){
+                    let history_time_update = [];
+                    history_time_update['status'] = modalStatus;
+                    history_time_update['status_description'] = rejectDescription ? rejectDescription : '';
+                    await dbUtils.update('tbl_employee_time_history', history_time_update, "id='"+historyData.id+"");
+                    status = 1;
+                    res.json({status:status, message: "Status updated successfully."});
 
-                    let time_update = [];
-                    time_update['start_time'] = historyData.start_time_format;
-                    time_update['end_time'] = historyData.end_time_format;
-                    time_update['total_time'] = seconds;
-                    time_update['is_updated'] = '1';
-                    await dbUtils.update('tbl_employee_time', time_update, "id='"+oldData.id+"'");
-
-                    const idData = await dbUtils.execute_single(`SELECT
-                        (SELECT id FROM tbl_employee_time 
-                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_timer_id,
-                        (SELECT TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
-                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_start_time,
-                        (SELECT id FROM tbl_employee_time 
-                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_timer_id,
-                        (SELECT TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
-                            WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_end_time`); 
-                    if(idData.prev_timer_id){
-                        var startDate = new Date(idData.prev_start_time);
-                        var endDate = new Date(historyData.start_time_format);
-                        let seconds = 0;
-                        if(historyData.start_time_format && idData.prev_start_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-                        let time_update = [];
-                        time_update['end_time'] = historyData.start_time_format;
-                        time_update['total_time'] = seconds;
-                        await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.prev_timer_id+"'");
-                    }
-                    if(idData.next_timer_id){
-                        var startDate = new Date(historyData.end_time_format);
-                        var endDate   = new Date(idData.next_end_time);
-                        let seconds = 0;
-                        if(historyData.end_time_format && idData.next_end_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-                        let time_update = [];
-                        time_update['start_time'] = historyData.end_time_format;
-                        time_update['total_time'] = seconds;
-                        await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.next_timer_id+"'");
-                    }
                 }
-                status = 1;
-                res.json({status:status, message: "User updated successfully."});
+                else if(timerData){
+                    res.status(500).json({ status:status, message: "Time already added in this time period"});
+                }
+                else{
+                    let history_time_update = [];
+                    history_time_update['status'] = modalStatus;
+                    history_time_update['status_description'] = rejectDescription ? rejectDescription : '';
+                    await dbUtils.update('tbl_employee_time_history', history_time_update, "id='"+historyData.id+"'");
+                    
+                    if(modalStatus == '1'){
+                        var startDate = new Date(historyData.start_time_format);
+                        var endDate   = new Date(historyData.end_time_format);
+                        var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+                        // const timer_date = startDate.toLocaleDateString("en-CA");
+
+                        let time_update = [];
+                        time_update['start_time'] = historyData.start_time_format;
+                        time_update['end_time'] = historyData.end_time_format;
+                        time_update['total_time'] = seconds;
+                        time_update['is_updated'] = '1';
+                        await dbUtils.update('tbl_employee_time', time_update, "id='"+oldData.id+"'");
+
+                        const idData = await dbUtils.execute_single(`SELECT
+                            (SELECT id FROM tbl_employee_time 
+                                WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_timer_id,
+                            (SELECT TO_CHAR(start_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
+                                WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND end_time <= timestamp '${oldData.start_time_format}' ORDER BY entry_date DESC LIMIT 1) AS prev_start_time,
+                            (SELECT id FROM tbl_employee_time 
+                                WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_timer_id,
+                            (SELECT TO_CHAR(end_time,'YYYY-MM-DD HH24:MI:SS') FROM tbl_employee_time 
+                                WHERE user_id = '${oldData.user_id}' AND TO_CHAR(start_time, 'YYYY-MM-DD') = '${timer_date}' AND start_time >= timestamp '${oldData.end_time_format}' ORDER BY entry_date ASC LIMIT 1) AS next_end_time`); 
+                        if(idData.prev_timer_id){
+                            var startDate = new Date(idData.prev_start_time);
+                            var endDate = new Date(historyData.start_time_format);
+                            let seconds = 0;
+                            if(historyData.start_time_format && idData.prev_start_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+                            let time_update = [];
+                            time_update['end_time'] = historyData.start_time_format;
+                            time_update['total_time'] = seconds;
+                            await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.prev_timer_id+"'");
+                        }
+                        if(idData.next_timer_id){
+                            var startDate = new Date(historyData.end_time_format);
+                            var endDate   = new Date(idData.next_end_time);
+                            let seconds = 0;
+                            if(historyData.end_time_format && idData.next_end_time) seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+                            let time_update = [];
+                            time_update['start_time'] = historyData.end_time_format;
+                            time_update['total_time'] = seconds;
+                            await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.next_timer_id+"'");
+                        }
+                    }
+                    status = 1;
+                    res.json({status:status, message: "Time updated successfully."});
+                }
             }
             else {
                 return res.status(400).json({ status:status, message: "sorry, somthing went wrong!"});
