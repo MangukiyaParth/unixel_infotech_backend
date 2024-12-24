@@ -411,31 +411,69 @@ router.get('/monthly-details', fetchuser, upload.none(), [], async (req, res)=>{
     let { empId, month } = req.query;
     
     let status = 0;
-    month = decodeURI(month);
+    const decodedMonth = decodeURI(month);
+    const monthStart = `${decodedMonth}-01`;
+    const monthEnd = `${decodedMonth}-30`;
     try{
         let monthlyData = [];
-        const monthData = await dbUtils.execute(`SELECT TO_CHAR(generate_series('${month}-01', '${month}-30', '1 day'::interval), 'YYYY-MM-DD') date`);
-        for(const dates of monthData) {
-            const timerData = await dbUtils.execute_single(`SELECT 
+        const monthData = await dbUtils.execute(`SELECT TO_CHAR(generate_series('${monthStart}', '${monthEnd}', '1 day'::interval), 'YYYY-MM-DD') date`);
+        
+        const timerData = await dbUtils.execute(`SELECT 
+                to_char(et.start_time, 'YYYY-MM-DD') AS date,
                 TO_CHAR(MIN(et.start_time), 'HH:MI AM') AS clockedin_time,
                 TO_CHAR(MAX(et.end_time), 'HH:MI AM') AS clockedout_time,
                 SUM(CASE WHEN et.action_type = 1 THEN et.total_time ELSE 0 END) AS total_work_time,
-                SUM(CASE WHEN et.action_type = 2 THEN et.total_time ELSE 0 END) AS total_break_time,
-                COALESCE(
-                    (SELECT CASE WHEN is_weekend != 1 THEN 1 ELSE 2 END FROM tbl_holiday WHERE to_char(TO_DATE(holiday_date,'DD-MM-YYYY'),'YYYY-MM-DD') = '${dates.date}' ORDER BY is_weekend LIMIT 1)
-                ,0) AS holiday,
-                COALESCE(
-                    (SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) 
-                        FROM tbl_leave_dates ld
-                        join tbl_leaves l on l.id = ld.leave_id
-                        WHERE ld.user_id = '${empId}' AND l.leave_status = '1' AND
-                        ld.leave_date = '${dates.date}')
-                ,0) AS total_leave
-                FROM tbl_employee_time et
-                WHERE et.user_id = '${empId}' AND to_char(et.start_time, 'YYYY-MM-DD') = '${dates.date}'`);
-            timerData['date'] = dates.date;
-            monthlyData.push(timerData);
-        }
+                SUM(CASE WHEN et.action_type = 2 THEN et.total_time ELSE 0 END) AS total_break_time
+            FROM tbl_employee_time et
+            WHERE 
+                et.user_id = '${empId}' AND 
+                to_char(et.start_time, 'YYYY-MM-DD') BETWEEN '${monthStart}' AND '${monthEnd}'
+            GROUP BY to_char(et.start_time, 'YYYY-MM-DD')`);
+        // Fetch holiday data for the month
+        const holidayQuery = `
+            SELECT 
+                to_char(to_date(holiday_date, 'DD-MM-YYYY'), 'YYYY-MM-DD') AS date,
+                CASE WHEN is_weekend != 1 THEN 1 ELSE 2 END AS holiday
+            FROM 
+                tbl_holiday
+            WHERE 
+                to_char(to_date(holiday_date, 'DD-MM-YYYY'), 'YYYY-MM-DD') BETWEEN '${monthStart}' AND '${monthEnd}';
+        `;
+        const holidayData = await dbUtils.execute(holidayQuery);
+
+        // Fetch leave data for the month
+        const leaveQuery = `
+            SELECT 
+                ld.leave_date AS date,
+                SUM(CASE WHEN ld.leave_time = '3' THEN 1 ELSE 0.5 END) AS total_leave
+            FROM 
+                tbl_leave_dates ld
+            JOIN 
+                tbl_leaves l ON l.id = ld.leave_id
+            WHERE 
+                ld.user_id = '${empId}' AND 
+                l.leave_status = '1' AND 
+                ld.leave_date BETWEEN '${monthStart}' AND '${monthEnd}'
+            GROUP BY ld.leave_date;
+        `;
+        const leaveData = await dbUtils.execute(leaveQuery);
+
+        // Combine all data
+        monthlyData = monthData.map(({ date }) => {
+            const timer = timerData.find(t => t.date === date) || {};
+            const holiday = holidayData.find(h => h.date === date) || { holiday: 0 };
+            const leave = leaveData.find(l => l.date === date) || { total_leave: 0 };
+
+            return {
+                date,
+                clockedin_time: timer.clockedin_time || null,
+                clockedout_time: timer.clockedout_time || null,
+                total_work_time: timer.total_work_time || 0,
+                total_break_time: timer.total_break_time || 0,
+                holiday: holiday.holiday,
+                total_leave: leave.total_leave,
+            };
+        });
         res.json({ status: 1, res_data: monthlyData});
     } catch (error){
         res.status(500).json({ status:status, error: "Internal server error"});
