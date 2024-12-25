@@ -433,7 +433,8 @@ router.get('/monthly-details', fetchuser, upload.none(), [], async (req, res)=>{
         const holidayQuery = `
             SELECT 
                 to_char(to_date(holiday_date, 'DD-MM-YYYY'), 'YYYY-MM-DD') AS date,
-                CASE WHEN is_weekend != 1 THEN 1 ELSE 2 END AS holiday
+                CASE WHEN is_weekend != 1 THEN 1 ELSE 2 END AS holiday,
+                CASE WHEN is_weekend != 1 THEN holiday_title ELSE 'Week Off' END AS holiday_title
             FROM 
                 tbl_holiday
             WHERE 
@@ -471,6 +472,7 @@ router.get('/monthly-details', fetchuser, upload.none(), [], async (req, res)=>{
                 total_work_time: timer.total_work_time || 0,
                 total_break_time: timer.total_break_time || 0,
                 holiday: holiday.holiday,
+                holiday_title: holiday.holiday_title,
                 total_leave: leave.total_leave,
             };
         });
