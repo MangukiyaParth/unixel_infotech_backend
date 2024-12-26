@@ -56,7 +56,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
                 SELECT to_char(et.start_time, 'YYYY-MM-DD') AS date,
                 SUM(et.total_time) AS difference
                 FROM tbl_employee_time et
-                WHERE et.action_type = 1 AND et.user_id = '24d815e3-1bb4-4e16-99ee-2a278d6ca15f' 
+                WHERE et.action_type = 1 AND et.user_id = '${req.user.id}' 
                 AND to_char(et.start_time, 'YYYY-MM') = '${curr_full_month}'
                 and et.end_time is not null
                 GROUP BY to_char(et.start_time, 'YYYY-MM-DD')
