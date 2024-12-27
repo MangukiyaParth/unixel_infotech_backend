@@ -281,7 +281,7 @@ router.get('/accountbyid', fetchuser, upload.none(), [], async (req, res)=>{
 router.get('/usertype', fetchuser, upload.none(), [], async (req, res)=>{
 	let status = 0;
 	try{
-		const usertype = await dbUtils.execute(`SELECT id, usertype FROM tbl_user_types WHERE id != '410544b2-4001-4271-9855-fec4b6a6442a'`);
+		const usertype = await dbUtils.execute(`SELECT id, usertype FROM tbl_user_types`);
 		if(!usertype){
 			return res.status(400).json({status:0, error: "User Type not found."})
 		}
