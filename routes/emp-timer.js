@@ -224,14 +224,14 @@ router.put('/manage', fetchuser, upload.none(), [], async (req, res)=>{
                     history_time_insert['user_id'] = oldData.user_id;
                     history_time_insert['action_type'] = oldData.action_type;
                     history_time_insert['reason'] = oldData.reason;
-                    if(roleId == process.env.NEXT_PUBLIC_MAINUTYPE){
+                    if(roleId == process.env.NEXT_PUBLIC_MAINUTYPE || roleId == process.env.NEXT_PUBLIC_SUBUTYPE){
                         history_time_insert['status'] = '1';
                     }
                     await dbUtils.insert('tbl_employee_time_history', history_time_insert);
                 }
                 
                 // Manage Emplyee Time
-                if(roleId == process.env.NEXT_PUBLIC_MAINUTYPE){
+                if(roleId == process.env.NEXT_PUBLIC_MAINUTYPE || roleId == process.env.NEXT_PUBLIC_SUBUTYPE){
                     let time_update = [];
                     time_update['start_time'] = start_date;
                     time_update['end_time'] = end_date;

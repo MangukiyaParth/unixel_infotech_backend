@@ -230,7 +230,6 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
 	const ITEMS_PER_PAGE = page_size;
     page = parseInt(page);
     const offset = (page - 1) * ITEMS_PER_PAGE;
-    const admin_utype = process.env.NEXT_PUBLIC_MAINUTYPE;
     let status = 0;
     let orderBy = "l.entry_date DESC";
     if(sortField != ""){
@@ -238,7 +237,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
     }
     try{
         let extraWhere = "";
-        if(req.user.roleId != admin_utype){
+        if(req.user.roleId != process.env.NEXT_PUBLIC_MAINUTYPE && req.user.roleId != process.env.NEXT_PUBLIC_SUBUTYPE){
             extraWhere = " l.user_id = '"+req.user.id+"' AND ";
         }
         const account = await dbUtils.execute(`SELECT l.*, u.name, 
