@@ -409,7 +409,7 @@ router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
                     notification_data['for_admin'] = '0';
                     notification_data['module_id'] = modalId;
                     notification_data['notification_type'] = 'TIMER';
-                    notification_data['title'] = `Request ${noti_action} from Admin`;
+                    notification_data['title'] = `Request ${noti_action} by Admin`;
                     notification_data['message'] = `Your Time Update request for ${oldData.timer_date} is ${noti_action} by Admin.`;
                     await dbUtils.insert('tbl_notification', notification_data);
                     status = 1;

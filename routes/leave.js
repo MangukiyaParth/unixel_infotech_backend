@@ -9,7 +9,7 @@ const upload = multer();
 router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0; 
     const {leaveDate, leave_type, leave_description, start_date, end_date, dateData} = req.body;
-    const { id } = req.user;
+    const { id, user_name } = req.user;
     try{
         let already_added = false;
         if(dateData){
@@ -97,6 +97,15 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
                 dbUtils.insert('tbl_leave_dates',leaveDateData);
             }
         }
+
+        let notification_data = [];
+        notification_data['user_id'] = id;
+        notification_data['for_admin'] = '1';
+        notification_data['module_id'] = newId[0].id;
+        notification_data['notification_type'] = 'LEAVE';
+        notification_data['title'] = "Request from "+user_name;
+        notification_data['message'] = "Leave apply for "+leaveDate;
+        await dbUtils.insert('tbl_notification', notification_data);
         res.json({status: 1, message: "Leave added successfully."});
     } catch (error){
         res.status(500).json({ status:status, error: "Internal server error", error_data: error});
@@ -303,12 +312,25 @@ router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const {modalLeaveId, modalLeaveStatus, rejectDescription} = req.body;
     try{
-        const user_leave = await dbUtils.execute_single(`SELECT l.id FROM tbl_leaves l WHERE l.id = '${modalLeaveId}'`);
+        const user_leave = await dbUtils.execute_single(`SELECT l.id, l.user_id, l.leave_date FROM tbl_leaves l WHERE l.id = '${modalLeaveId}'`);
         if(user_leave){
             let leaveData = [];
             leaveData['leave_status'] = modalLeaveStatus;
             leaveData['status_description'] = (modalLeaveStatus != 2) ? "" : rejectDescription;
             dbUtils.update('tbl_leaves',leaveData, "id='"+modalLeaveId+"'");
+
+            let noti_action = "Approved";
+            if(modalLeaveStatus == '2'){
+                noti_action = "Rejected";
+            }
+            let notification_data = [];
+            notification_data['user_id'] = user_leave.user_id;
+            notification_data['for_admin'] = '0';
+            notification_data['module_id'] = modalLeaveId;
+            notification_data['notification_type'] = 'LEAVE';
+            notification_data['title'] = `Request ${noti_action} by Admin`;
+            notification_data['message'] = `Your Leave for ${user_leave.leave_date} is ${noti_action} by Admin.`;
+            await dbUtils.insert('tbl_notification', notification_data);
         }
         else {
             return res.status(400).json({ status:status, message: "sorry, somthing went wrong!"});
