@@ -328,6 +328,32 @@ async function seedHoliday() {
         throw error;
     }
 }
+async function seedHoliday() {
+    try {
+        const createTable = await pool.query(`
+            CREATE TABLE IF NOT EXISTS tbl_notification
+            (
+                id uuid DEFAULT uuid_generate_v4() PRIMARY KEY UNIQUE,
+                user_id uuid,
+                module_id uuid,
+                notification_type character varying(50),
+                is_read integer DEFAULT 0,
+                for_admin integer DEFAULT 0,
+                title text,
+                message text,
+                entry_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        console.log(`Created "tbl_notification" table`);
+        return {
+            createTable
+        };
+    } catch (error) {
+        console.error('Error seeding notification:', error);
+        throw error;
+    }
+}
 
 async function main() {
     await client.connect();
@@ -344,6 +370,7 @@ async function main() {
     await seedFiles();
     await seedSettings();
     await seedHoliday();
+    await seedNotification();
   
     return;
     // await client.end();

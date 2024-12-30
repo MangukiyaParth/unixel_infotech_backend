@@ -355,7 +355,8 @@ router.post('/login', upload.none(), [body('email', 'Enter a email').exists(),bo
                     user: {
                         id:user.id,
                         role:user.usertype,
-                        roleId:user.usertypeid
+                        roleId:user.usertypeid,
+                        user_name:user.name
                     },
                     provider: user.provider_name
                 };

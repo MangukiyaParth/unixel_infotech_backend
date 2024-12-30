@@ -176,7 +176,7 @@ router.get('/details', fetchuser, upload.none(), [], async (req, res)=>{
 // Add employee clockout
 router.put('/manage', fetchuser, upload.none(), [], async (req, res)=>{
     const { start_time, end_time, timer_date, timer_id, timer_user } = req.body;
-    const { roleId, id } = req.user;
+    const { roleId, user_name, id } = req.user;
     let status = 0;
     const start_date = timer_date+" "+start_time+":00";
     const end_date = timer_date+" "+end_time+":00";
@@ -268,6 +268,16 @@ router.put('/manage', fetchuser, upload.none(), [], async (req, res)=>{
                         time_update['total_time'] = seconds;
                         await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.next_timer_id+"'");
                     }
+                }
+                else{
+                    let notification_data = [];
+                    notification_data['user_id'] = timer_user;
+                    notification_data['for_admin'] = '1';
+                    notification_data['module_id'] = timer_id;
+                    notification_data['notification_type'] = 'TIMER';
+                    notification_data['title'] = "Request from "+user_name;
+                    notification_data['message'] = "Time Update Requested for "+timer_date;
+                    await dbUtils.insert('tbl_notification', notification_data);
                 }
                 res.json({ status: 1, res_data: timerData, message: 'success'});
             }
@@ -390,6 +400,18 @@ router.put('/status', fetchuser, upload.none(), [], async (req, res)=>{
                             await dbUtils.update('tbl_employee_time', time_update, "id='"+idData.next_timer_id+"'");
                         }
                     }
+                    let noti_action = "Approved";
+                    if(modalStatus == '2'){
+                        noti_action = "Rejected";
+                    }
+                    let notification_data = [];
+                    notification_data['user_id'] = oldData.user_id;
+                    notification_data['for_admin'] = '0';
+                    notification_data['module_id'] = modalId;
+                    notification_data['notification_type'] = 'TIMER';
+                    notification_data['title'] = `Request ${noti_action} from Admin`;
+                    notification_data['message'] = `Your Time Update request for ${oldData.timer_date} is ${noti_action} by Admin.`;
+                    await dbUtils.insert('tbl_notification', notification_data);
                     status = 1;
                     res.json({status:status, message: "Time updated successfully."});
                 }
