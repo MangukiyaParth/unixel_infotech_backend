@@ -435,7 +435,10 @@ router.get('/monthly-details', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const decodedMonth = decodeURI(month);
     const monthStart = `${decodedMonth}-01`;
-    const monthEnd = `${decodedMonth}-30`;
+    const splitMonth = decodedMonth.split('-');
+    const lastDay = new Date(parseInt(splitMonth[0]), parseInt(splitMonth[1]), 1);
+    const monthEnd = lastDay.toISOString().split('T')[0];
+    // const monthEnd = `${decodedMonth}-30`;
     try{
         let monthlyData = [];
         const monthData = await dbUtils.execute(`SELECT TO_CHAR(generate_series('${monthStart}', '${monthEnd}', '1 day'::interval), 'YYYY-MM-DD') date`);
