@@ -146,15 +146,11 @@ module.exports = {
         if (!records || records.length === 0) return;
     
         const keys = Object.keys(records[0]);
-        const values = records.map(record => keys.map(key => record[key]));
-        const placeholders = `(${keys.join(', ')})`;
-    
+        const values = records.map(record => keys.map(key => record[key]).join("', '"));
         const query = `
             INSERT INTO ${tableName} (${keys.join(', ')})
-            VALUES ${values.map(() => placeholders).join(', ')};
+            VALUES ${values.map(val => `('${val}')`).join(', ')};
         `;
-    
-        // return execute(sql, values.flat());
         return execute_query(query);
     }
 }

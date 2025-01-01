@@ -5,12 +5,14 @@ const dbUtils = require('../helper/index').Db;
 // Get User time by Id
 router.get('/', async (req, res) => {
     try {
-        const year = new Date().getFullYear() + 1;
+        const year = new Date().getFullYear();
         const weekOffDays = getWeekOffDays(year);
         
         const existingHolidays = await dbUtils.execute_single(`SELECT id FROM tbl_holiday WHERE holiday_year = '${year}' AND is_weekend = '1'`);
-        const existingDates = new Set(existingHolidays.map(h => h.holiday_date));
-
+        let existingDates = new Set();
+        if(existingHolidays && existingHolidays.length == 0){
+            existingDates = new Set(existingHolidays.map(h => h.holiday_date));
+        }
         // Prepare new records for batch insert
         const newHolidays = weekOffDays
             .filter(date => !existingDates.has(date))
