@@ -5,7 +5,7 @@ const dbUtils = require('../helper/index').Db;
 // Get User time by Id
 router.get('/', async (req, res) => {
     try {
-        const year = new Date().getFullYear();
+        const year = new Date().getFullYear() + 1;
         const weekOffDays = getWeekOffDays(year);
         
         const existingHolidays = await dbUtils.execute_single(`SELECT id FROM tbl_holiday WHERE holiday_year = '${year}' AND is_weekend = '1'`);
@@ -28,18 +28,6 @@ router.get('/', async (req, res) => {
         if (newHolidays.length > 0) {
             await dbUtils.insertBatch('tbl_holiday', newHolidays);
         }
-        // for (const date of weekOffDays) {
-        //     if(!holidayExists){
-        //         const holidayData = {
-        //             holiday_year: year,
-        //             holiday_date: date,
-        //             holiday_title: 'Week Off',
-        //             is_weekend: '1',
-        //             user_id: '410544b2-4001-4271-9855-fec4b6a6442a',
-        //         };
-        //         await dbUtils.insert('tbl_holiday', holidayData);
-        //     }
-        // }
 
         res.status(200).json({ message: "Success" });
     } catch (error) {
