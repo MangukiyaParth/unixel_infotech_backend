@@ -140,5 +140,21 @@ module.exports = {
     execute_single: async function(query){
         let res = await execute_query(query);
         return res[0];
+    },
+
+    insertBatch: async function(tableName, records) {
+        if (!records || records.length === 0) return;
+    
+        const keys = Object.keys(records[0]);
+        const values = records.map(record => keys.map(key => record[key]));
+        const placeholders = `(${keys.join(', ')})`;
+    
+        const query = `
+            INSERT INTO ${tableName} (${keys.join(', ')})
+            VALUES ${values.map(() => placeholders).join(', ')};
+        `;
+    
+        // return execute(sql, values.flat());
+        return execute_query(query);
     }
 }

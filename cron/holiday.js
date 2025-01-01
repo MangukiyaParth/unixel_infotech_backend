@@ -8,19 +8,36 @@ router.get('/', async (req, res) => {
         const year = new Date().getFullYear() + 1;
         const weekOffDays = getWeekOffDays(year);
         
-        for (const date of weekOffDays) {
-            const holidayExists = await dbUtils.execute_single(`SELECT id FROM tbl_holiday WHERE holiday_year = '${year}' AND holiday_date = '${date}' AND is_weekend = '1'`);
-            if(!holidayExists){
-                const holidayData = {
-                    holiday_year: year,
-                    holiday_date: date,
-                    holiday_title: 'Week Off',
-                    is_weekend: '1',
-                    user_id: '410544b2-4001-4271-9855-fec4b6a6442a',
-                };
-                await dbUtils.insert('tbl_holiday', holidayData);
-            }
+        const existingHolidays = await dbUtils.execute_single(`SELECT id FROM tbl_holiday WHERE holiday_year = '${year}' AND is_weekend = '1'`);
+        const existingDates = new Set(existingHolidays.map(h => h.holiday_date));
+
+        // Prepare new records for batch insert
+        const newHolidays = weekOffDays
+            .filter(date => !existingDates.has(date))
+            .map(date => ({
+                holiday_year: year,
+                holiday_date: date,
+                holiday_title: 'Week Off',
+                is_weekend: '1',
+                user_id: '410544b2-4001-4271-9855-fec4b6a6442a',
+            }));
+
+        // Perform batch insert if there are new holidays
+        if (newHolidays.length > 0) {
+            await dbUtils.insertBatch('tbl_holiday', newHolidays);
         }
+        // for (const date of weekOffDays) {
+        //     if(!holidayExists){
+        //         const holidayData = {
+        //             holiday_year: year,
+        //             holiday_date: date,
+        //             holiday_title: 'Week Off',
+        //             is_weekend: '1',
+        //             user_id: '410544b2-4001-4271-9855-fec4b6a6442a',
+        //         };
+        //         await dbUtils.insert('tbl_holiday', holidayData);
+        //     }
+        // }
 
         res.status(200).json({ message: "Success" });
     } catch (error) {
