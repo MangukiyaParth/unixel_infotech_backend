@@ -40,7 +40,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
             FROM tbl_users u
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             JOIN tbl_user_types ut ON u.usertype = ut.id 
-            WHERE TO_CHAR(TO_DATE(join_date, 'DD/MM/YYYY'),'MM-DD') = '${month}'`);
+            WHERE TO_CHAR(TO_DATE(join_date, 'DD/MM/YYYY'),'MM-DD') = '${month}' AND TO_CHAR(TO_DATE(join_date, 'DD/MM/YYYY'),'YYYY-MM-DD') != '${curr_full_date}'`);
 
         const holidayData = await dbUtils.execute(`SELECT TO_CHAR(TO_DATE(holiday_date, 'DD/MM/YYYY'),'YYYY-MM-DD') as holiday_date, holiday_title FROM tbl_holiday 
             WHERE is_weekend = 0 AND TO_CHAR(TO_DATE(holiday_date, 'DD/MM/YYYY'),'YYYY-MM') = '${curr_full_month}'`);
