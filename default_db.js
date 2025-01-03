@@ -44,6 +44,7 @@ async function seedUsers() {
                 mother_contact text NULL,
                 join_date VARCHAR(50) NULL,
                 birth_date VARCHAR(50) NULL,
+                profile_color VARCHAR(10) NULL,
                 salary integer NULL,
                 entry_uid UUID NULL,
                 entry_date TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP

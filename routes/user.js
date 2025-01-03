@@ -21,6 +21,9 @@ router.post('/createaccount', upload.none(), [], async (req, res)=>{
             return res.status(400).json({ status:status, error: "sorry a user with this email alredy exists"});
         }
         else {
+            const profile_colors = ["white", "blue", "red", "green", "yellow", "purple", "", "dark", "black"];
+            const random = Math.floor(Math.random() * profile_colors.length);
+            const profile_color = profile_colors[random];
             const hashedPassword = await bcrypt.hash(password, 10);
             let userData = [];
             userData['usertype'] = accTypeId;
@@ -42,6 +45,7 @@ router.post('/createaccount', upload.none(), [], async (req, res)=>{
             userData['join_date'] = join_date;
             userData['birth_date'] = birth_date;
             userData['salary'] = salary;
+            userData['profile_color'] = profile_color;
             dbUtils.insert('tbl_users',userData);
         }
         status = 1;
@@ -336,7 +340,8 @@ router.post('/login', upload.none(), [body('email', 'Enter a email').exists(),bo
 			u.email,
 			u.mobile,
             u.password,
-            u.profile_pic
+            u.profile_pic,
+            u.profile_color
 		FROM tbl_users u
 		LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
         JOIN tbl_user_types ut ON u.usertype = ut.id 
@@ -356,7 +361,8 @@ router.post('/login', upload.none(), [body('email', 'Enter a email').exists(),bo
                         id:user.id,
                         role:user.usertype,
                         roleId:user.usertypeid,
-                        user_name:user.name
+                        user_name:user.name,
+                        profile_color:user.profile_color
                     },
                     provider: user.provider_name
                 };
