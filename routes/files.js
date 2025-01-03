@@ -36,7 +36,7 @@ router.post('/upload', fetchuser, upload.array('files'), [], async (req, res)=>{
         });
         
         // Send the files to the PHP server
-        const api_response = await axios.post('https://livevideocallapps.com/unixelinfotech/upload.php', form, {
+        const api_response = await axios.post(process.env.NEXT_PUBLIC_FILE_URL+'upload.php', form, {
             headers: form.getHeaders(),
         });
         const { file_data, file_status } = api_response.data;
@@ -110,13 +110,21 @@ router.delete('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const { id } = req.body;
     try{
-        const files = await dbUtils.execute(`SELECT * FROM tbl_files WHERE id = '${id}' AND user_id = '${req.user.id}'`);
+        const files = await dbUtils.execute_single(`SELECT * FROM tbl_files WHERE id = '${id}' AND user_id = '${req.user.id}'`);
         if(!files){
             return res.status(400).json({status:0, error: "Data not found."})
         }
         else 
         {
             // Add logic for check file use
+            const form = new FormData();
+            form.append('url', files.file_url);
+            
+            console.log(files.file_url);
+            // Send the files to the PHP server
+            await axios.post(process.env.NEXT_PUBLIC_FILE_URL+'delete.php', form, {
+                headers: form.getHeaders(),
+            });
             dbUtils.delete('tbl_files',"id='"+id+"'");
             res.json({ status: 1, message: "File deleted successfully." });
         }
