@@ -1,39 +1,63 @@
 const express = require('express');
 const router = express.Router();
 var fetchuser = require('../middlewere/fetchuser');
+const axios = require('axios');
 const multer  = require('multer');
-const multerStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/')
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + "-" + file.originalname)
-    }
-});
-const upload = multer({ storage: multerStorage });
+const FormData = require('form-data');
+// const multerStorage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, 'uploads/')
+//     },
+//     filename: function (req, file, cb) {
+//         cb(null, Date.now() + "-" + file.originalname)
+//     }
+// });
+// const upload = multer({ storage: multerStorage });
 var dbUtils = require('../helper/index').Db;
 
 // Create an uploads directory if it doesn't exist
-const fs = require('fs');
-if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads');
-}
+// const fs = require('fs');
+// if (!fs.existsSync('uploads')) {
+//     fs.mkdirSync('uploads');
+// }
+
+const upload = multer({ storage: multer.memoryStorage() }); // Memory storage for Vercel
 
 // Create a Account
 router.post('/upload', fetchuser, upload.array('files'), [], async (req, res)=>{
     let status = 0;
     const { id } = req.user;
     try{
-        req.files.forEach((value, index) => {
-            let fileData = [];
-            fileData['file_name'] = value.originalname;
-            fileData['file_url'] = value.filename;
-            fileData['file_full_url'] = value.path.replace("\\", "/").replace(/\\/g, "/").replace("public/", "");
-            fileData['file_type'] = value.mimetype;
-            fileData['file_data'] = JSON.stringify(value);
-            fileData['user_id'] = id;
-            dbUtils.insert('tbl_files',fileData);
+        const form = new FormData();
+        
+        // Append each file to the FormData instance
+        req.files.forEach((file) => {
+            form.append('files[]', file.buffer, file.originalname);
         });
+        
+        // Send the files to the PHP server
+        const api_response = await axios.post('https://livevideocallapps.com/unixelinfotech/upload.php', form, {
+            headers: form.getHeaders(),
+        });
+        const { file_data, file_status } = api_response.data;
+        const newFiles = [];
+        if(file_status == 1){
+            req.files.forEach(async (value, index) => {
+                let fileData = [];
+                fileData['file_name'] = value.originalname;
+                fileData['file_url'] = file_data[index].file;
+                fileData['file_full_url'] = file_data[index].path;
+                fileData['file_type'] = value.mimetype;
+                // fileData['file_data'] = JSON.stringify(value);
+                fileData['user_id'] = id;
+                newFiles.push(fileData);
+                // await dbUtils.insert('tbl_files',fileData, 'id');
+            });
+        }
+
+        if (newFiles.length > 0) {
+            await dbUtils.insertBatch('tbl_files', newFiles);
+        }
         status = 1;
         res.json({status:status, message: "File(s) added successfully."});
     } catch (error){
