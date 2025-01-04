@@ -82,16 +82,27 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
                     askReason = true;
             }
             else{
-                updateEndTime = true;
+                updateEndTime = false; // Save data after enter work details
             }
         }
         else {
-            updateEndTime = true;
-            if(account || currStatus == 1){
-                let timeData = [];
-                timeData['user_id'] = id;
-                timeData['action_type'] = currStatus;
-                await dbUtils.insert('tbl_employee_time',timeData);
+            if(currStatus == 1){
+                const totalTimeData = await dbUtils.execute_single(`SELECT
+                    (SELECT SUM(ROUND(EXTRACT(EPOCH FROM (CASE WHEN (end_time is null) THEN now() ELSE end_time END - start_time)))) AS difference FROM tbl_employee_time where action_type = 2 AND user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}') as total_time,
+                    (SELECT break_time*60 FROM tbl_settings LIMIT 1) AS break_time`);
+                if(totalTimeData.break_time < totalTimeData.total_time){
+                        askReason = true;
+                }
+            }
+
+            if(!askReason){
+                updateEndTime = true;
+                if(account || currStatus == 1){
+                    let timeData = [];
+                    timeData['user_id'] = id;
+                    timeData['action_type'] = currStatus;
+                    await dbUtils.insert('tbl_employee_time',timeData);
+                }
             }
         }
 
@@ -113,7 +124,7 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
 
 // Add employee clockout
 router.put('/clockout', fetchuser, upload.none(), [], async (req, res)=>{
-    const { reason } = req.body;
+    const { reason, work_detail } = req.body;
     const { id } = req.user;
     const date = new Date();
     const curr_date = date.toLocaleDateString("en-CA");
@@ -128,7 +139,39 @@ router.put('/clockout', fetchuser, upload.none(), [], async (req, res)=>{
             time_update['end_time'] = 'NOW()';
             time_update['total_time'] = seconds;
             time_update['reason'] = reason;
+            time_update['work_details'] = work_detail;
             await dbUtils.update('tbl_employee_time', time_update, "id='"+account.id+"'");
+        }
+        res.json({ status: 1, message: 'success'});
+        
+    } catch (error){
+        res.status(500).json({ status:status, error: "Internal server error"});
+    }
+});
+
+// Add employee extra break reason
+router.put('/extra-break', fetchuser, upload.none(), [], async (req, res)=>{
+    const { break_reason } = req.body;
+    const { id } = req.user;
+    const date = new Date();
+    const curr_date = date.toLocaleDateString("en-CA");
+    let status = 0;
+    try{
+        const account = await dbUtils.execute_single(`SELECT id, start_time FROM tbl_employee_time where user_id = '${id}' AND to_char(start_time, 'YYYY-MM-DD') = '${curr_date}' AND end_time is null ORDER BY entry_date DESC LIMIT 1`);
+        if(account){
+            var startDate = new Date(account.start_time);
+            var endDate   = new Date();
+            var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+            let time_update = [];
+            time_update['end_time'] = 'NOW()';
+            time_update['total_time'] = seconds;
+            time_update['reason'] = break_reason;
+            await dbUtils.update('tbl_employee_time', time_update, "id='"+account.id+"'");
+
+            let timeData = [];
+            timeData['user_id'] = id;
+            timeData['action_type'] = 1;
+            await dbUtils.insert('tbl_employee_time',timeData);
         }
         res.json({ status: 1, message: 'success'});
         
@@ -151,7 +194,7 @@ router.get('/details', fetchuser, upload.none(), [], async (req, res)=>{
             CASE WHEN (th.status = 1 OR th.id is null) THEN to_char(et.end_time, 'HH:MI AM') ELSE to_char(th.updated_end_time, 'HH:MI AM') END AS end_time, 
             CASE WHEN (th.status = 1 OR th.id is null) THEN to_char(et.start_time, 'HH24:MI') ELSE to_char(th.updated_start_time, 'HH24:MI') END AS full_start_time, 
             CASE WHEN (th.status = 1 OR th.id is null) THEN to_char(et.end_time, 'HH24:MI') ELSE to_char(th.updated_end_time, 'HH24:MI') END AS full_end_time,
-            et.total_time, et.action_type,
+            et.total_time, et.action_type, et.reason, et.work_details,
             to_char(th.start_time, 'HH:MI AM') AS old_start_time,
 	        to_char(th.end_time, 'HH:MI AM') AS old_end_time,
             th.status, th.status_description,

@@ -26,7 +26,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
 // Update setting 
 router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
-    const { late_time, notice, free_leave_limit, full_day_time, half_day_time, end_time } = req.body;
+    const { late_time, notice, free_leave_limit, full_day_time, half_day_time, end_time, break_time } = req.body;
     try{
         await dbUtils.execute('TRUNCATE tbl_settings');
         let settingData = [];
@@ -36,6 +36,7 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
         settingData['full_day_time'] = full_day_time;
         settingData['half_day_time'] = half_day_time;
         settingData['end_time'] = end_time;
+        settingData['break_time'] = break_time;
         await dbUtils.insert('tbl_settings',settingData);
        
         status = 1;

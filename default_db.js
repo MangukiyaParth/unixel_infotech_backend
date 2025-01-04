@@ -132,6 +132,7 @@ async function seedEmployeeTime() {
                 total_time numeric NOT NULL DEFAULT 0,
                 end_time timestamp without time zone,
                 reason text,
+                work_details text,
                 is_updated integer DEFAULT 0
             );
         `);
@@ -290,6 +291,7 @@ async function seedSettings() {
                 full_day_time integer,
                 half_day_time integer,
                 end_time VARCHAR(25),
+                break_time integer,
                 entry_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP
             );
         `);
