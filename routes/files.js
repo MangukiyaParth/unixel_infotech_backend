@@ -116,20 +116,25 @@ router.delete('/', fetchuser, upload.none(), [], async (req, res)=>{
         }
         else 
         {
-            // Add logic for check file use
-            const form = new FormData();
-            form.append('url', files.file_url);
-            
-            console.log(files.file_url);
-            // Send the files to the PHP server
-            await axios.post(process.env.NEXT_PUBLIC_FILE_URL+'delete.php', form, {
-                headers: form.getHeaders(),
-            });
-            dbUtils.delete('tbl_files',"id='"+id+"'");
-            res.json({ status: 1, message: "File deleted successfully." });
+            const check_file_use = await dbUtils.execute_single(`SELECT id FROM tbl_users WHERE profile_pic_id = '${id}' OR adhar_front_id = '${id}' OR adhar_back_id = '${id}' OR pan_front_id = '${id}' OR  pan_back_id = '${id}' LIMIT 1`);
+            if(check_file_use){
+                res.json({ status: 0, message: "File is in use." });
+            }
+            else{
+                // Add logic for check file use
+                const form = new FormData();
+                form.append('url', files.file_url);
+                
+                // Send the files to the PHP server
+                await axios.post(process.env.NEXT_PUBLIC_FILE_URL+'delete.php', form, {
+                    headers: form.getHeaders(),
+                });
+                dbUtils.delete('tbl_files',"id='"+id+"'");
+                res.json({ status: 1, message: "File deleted successfully." });
+            }
         }
     } catch (error){
-        res.status(500).json({ status:status, error: "Internal server error", error_data: error});
+        res.status(500).json({ status:status, message: "Internal server error", error_data: error});
     }
 });
 
