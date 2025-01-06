@@ -490,6 +490,7 @@ router.get('/monthly-details', fetchuser, upload.none(), [], async (req, res)=>{
                 to_char(et.start_time, 'YYYY-MM-DD') AS date,
                 TO_CHAR(MIN(et.start_time), 'HH:MI AM') AS clockedin_time,
                 TO_CHAR(MAX(et.end_time), 'HH:MI AM') AS clockedout_time,
+                string_agg(et.work_details, '') AS work_details,
                 SUM(CASE WHEN et.action_type = 1 THEN et.total_time ELSE 0 END) AS total_work_time,
                 SUM(CASE WHEN et.action_type = 2 THEN et.total_time ELSE 0 END) AS total_break_time
             FROM tbl_employee_time et
@@ -539,6 +540,7 @@ router.get('/monthly-details', fetchuser, upload.none(), [], async (req, res)=>{
                 clockedout_time: timer.clockedout_time || null,
                 total_work_time: timer.total_work_time || 0,
                 total_break_time: timer.total_break_time || 0,
+                work_details: timer.work_details || null,
                 holiday: holiday.holiday,
                 holiday_title: holiday.holiday_title,
                 total_leave: leave.total_leave,
