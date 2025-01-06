@@ -443,7 +443,7 @@ router.get('/employee', fetchuser, upload.none(), [], async (req, res)=>{
                 u.name
             FROM tbl_users u
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
-            WHERE u.usertype = '${process.env.NEXT_PUBLIC_EMPUTYPE}' ${extraWhere}`);
+            WHERE u.usertype != '${process.env.NEXT_PUBLIC_MAINUTYPE}' ${extraWhere}`);
         if(!users){
             return res.status(400).json({status:0, error: "User not found."})
         }
