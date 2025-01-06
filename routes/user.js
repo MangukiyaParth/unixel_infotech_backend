@@ -434,7 +434,7 @@ router.get('/employee', fetchuser, upload.none(), [], async (req, res)=>{
     const { roleId, id } = req.user;
 	try{
         let extraWhere = "";
-        if(roleId == process.env.NEXT_PUBLIC_EMPUTYPE){
+        if(roleId == process.env.NEXT_PUBLIC_EMPUTYPE || roleId == process.env.NEXT_PUBLIC_SUBUTYPE){
             extraWhere = ` AND u.id = '${id}' `;
         }
 		const users = await dbUtils.execute(`SELECT
