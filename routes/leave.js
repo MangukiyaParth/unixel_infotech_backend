@@ -50,14 +50,23 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
                 return res.status(400).json({ status:status, error: "Sorry! You have reached yearly Free leave Limit ("+yearly_leave_limit+")"});
             }
             else{
-                const monthly_leave = await dbUtils.execute_single(`SELECT free_leave_limit FROM tbl_settings LIMIT 1`);
+                const monthly_leave = await dbUtils.execute_single(`SELECT
+                    (SELECT free_leave_limit FROM tbl_settings LIMIT 1) AS free_leave_limit,
+                    (SELECT TO_CHAR(TO_DATE(join_date,'DD/MM/YYYY'),'MM-DD') FROM tbl_users WHERE id = '${req.user.id}') AS join_date`);
                 const monthly_leave_limit = monthly_leave.free_leave_limit;
-
+                const join_date = monthly_leave.join_date;
+                const start_year = (start_date.split('-')[0] - 1);
+                const prev_year_chk = (start_year - 1)+""+(monthly_leave.join_date.replace("-",""));
+                const curr_full_date_chk = start_date.replaceAll("-","");
+                let leave_tenure_start_date = `${start_year}-${join_date}`;
+                if(parseInt(prev_year_chk) > parseInt(curr_full_date_chk)){
+                    leave_tenure_start_date = `${start_year - 1}-${join_date}`;
+                }
                 const monthly_taken_paid_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS monthly_leave 
                     FROM tbl_leave_dates ld
                     join tbl_leaves l on l.id = ld.leave_id
                     WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' AND
-                    to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY-MM') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY-MM')`);
+                    TO_DATE(ld.leave_date,'YYYY-MM-DD') BETWEEN TO_DATE('${leave_tenure_start_date}','YYYY-MM-DD') AND (TO_DATE('${leave_tenure_start_date}','YYYY-MM-DD') + INTERVAL '1 year' - INTERVAL '1 day')`);
                 let used_monthly_leave = (monthly_taken_paid_leave && monthly_taken_paid_leave.monthly_leave) ? monthly_taken_paid_leave.monthly_leave : 0;
                 if(used_monthly_leave >= monthly_leave_limit){
                     return res.status(400).json({ status:status, error: "Sorry! You have reached monthly Free leave Limit ("+monthly_leave_limit+")"});
@@ -146,11 +155,21 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
             if(leave_type == 1){
                 const yearly_leave_limit = 12;
                 let remain_leave = 0;
+                const joinData = await dbUtils.execute_single(`SELECT TO_CHAR(TO_DATE(join_date,'DD/MM/YYYY'),'MM-DD') AS join_date FROM tbl_users WHERE id = '${req.user.id}'`);
+                const join_date = joinData.join_date;
+                const start_year = (start_date.split('-')[0] - 1);
+                const prev_year_chk = (start_year - 1)+""+(joinData.join_date.replace("-",""));
+                const curr_full_date_chk = start_date.replaceAll("-","");
+                let leave_tenure_start_date = `${start_year}-${join_date}`;
+                if(parseInt(prev_year_chk) > parseInt(curr_full_date_chk)){
+                    leave_tenure_start_date = `${start_year - 1}-${join_date}`;
+                }
+
                 const yearly_taken_paid_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS yearly_leave 
                 FROM tbl_leave_dates ld
                 join tbl_leaves l on l.id = ld.leave_id
                 WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' AND ld.leave_id != '${id}'  AND
-                to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY')`);
+                TO_DATE(ld.leave_date,'YYYY-MM-DD') BETWEEN TO_DATE('${leave_tenure_start_date}','YYYY-MM-DD') AND (TO_DATE('${leave_tenure_start_date}','YYYY-MM-DD') + INTERVAL '1 year' - INTERVAL '1 day')`);
                 const used_yearly_leave = (yearly_taken_paid_leave && yearly_taken_paid_leave.yearly_leave) ? yearly_taken_paid_leave.yearly_leave : 0;
                 if(used_yearly_leave >= yearly_leave_limit){
                     return res.status(400).json({ status:status, error: "Sorry! You have reached yearly Free leave Limit ("+yearly_leave_limit+")"});
@@ -163,7 +182,7 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
                         FROM tbl_leave_dates ld
                         join tbl_leaves l on l.id = ld.leave_id
                         WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' AND ld.leave_id != '${id}' AND
-                        to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY-MM') = to_char(TO_DATE('${start_date}','YYYY-MM-DD'),'YYYY-MM')`);
+                        TO_DATE(ld.leave_date,'YYYY-MM-DD') BETWEEN TO_DATE('${leave_tenure_start_date}','YYYY-MM-DD') AND (TO_DATE('${leave_tenure_start_date}','YYYY-MM-DD') + INTERVAL '1 year' - INTERVAL '1 day')`);
                     let used_monthly_leave = (monthly_taken_paid_leave && monthly_taken_paid_leave.monthly_leave) ? monthly_taken_paid_leave.monthly_leave : 0;
                     if(used_monthly_leave >= monthly_leave_limit){
                         return res.status(400).json({ status:status, error: "Sorry! You have reached monthly Free leave Limit ("+monthly_leave_limit+")"});

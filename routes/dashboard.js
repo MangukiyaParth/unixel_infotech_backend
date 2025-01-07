@@ -23,7 +23,17 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
     var curr_full_month = curr_date.getFullYear() + "-" + curr_month;
     const curr_year = curr_date.getFullYear();
     try{
-        const settingData = await dbUtils.execute_single(`SELECT *, CONCAT(' ',late_time,':00') AS office_end_time FROM tbl_settings LIMIT 1`);
+        const settingData = await dbUtils.execute_single(`SELECT
+            (SELECT full_day_time FROM tbl_settings LIMIT 1) AS full_day_time,
+            (SELECT CONCAT(' ',late_time,':00') FROM tbl_settings LIMIT 1) AS office_end_time,
+            (SELECT TO_CHAR(TO_DATE(join_date,'DD/MM/YYYY'),'MM-DD') FROM tbl_users WHERE id = '${req.user.id}') AS join_date`);
+        const join_date = settingData.join_date;
+        const prev_year_chk = (curr_year - 1)+""+(settingData.join_date.replace("-",""));
+        const curr_full_date_chk = curr_full_date.replaceAll("-","");
+        let leave_tenure_start_date = `${curr_year}-${join_date}`;
+        if(parseInt(prev_year_chk) > parseInt(curr_full_date_chk)){
+            leave_tenure_start_date = `${curr_year - 1}-${join_date}`;
+        }
         const birthdayData = await dbUtils.execute(`select u.id,u.profile_pic,u.profile_color,ut.usertype, u.usertype AS usertypeid, et.employeetype, u.name, u.birth_date, 
             TO_DATE(u.birth_date, 'DD/MM/YYYY') as birth_date_formated,
             CASE WHEN (TO_CHAR(TO_DATE(birth_date, 'DD/MM/YYYY'),'DD') = '${curr_day}') THEN 'Today'
@@ -49,8 +59,7 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
             FROM tbl_leave_dates ld
             join tbl_leaves l on l.id = ld.leave_id
             WHERE ld.user_id = '${req.user.id}' AND l.leave_type = '1' AND l.leave_status != '2' AND
-            to_char(TO_DATE(ld.leave_date,'YYYY-MM-DD'),'YYYY') = '${curr_year}'`);
-        
+            TO_DATE(ld.leave_date,'YYYY-MM-DD') BETWEEN TO_DATE('${leave_tenure_start_date}','YYYY-MM-DD') AND (TO_DATE('${leave_tenure_start_date}','YYYY-MM-DD') + INTERVAL '1 year' - INTERVAL '1 day')`);
         const remainHoursData = await dbUtils.execute(`SELECT * FROM 
             (
                 SELECT to_char(et.start_time, 'YYYY-MM-DD') AS date,
