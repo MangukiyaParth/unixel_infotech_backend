@@ -331,7 +331,7 @@ async function seedHoliday() {
         throw error;
     }
 }
-async function seedHoliday() {
+async function seedNotification() {
     try {
         const createTable = await pool.query(`
             CREATE TABLE IF NOT EXISTS tbl_notification
@@ -344,6 +344,43 @@ async function seedHoliday() {
                 for_admin integer DEFAULT 0,
                 title text,
                 message text,
+                entry_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        console.log(`Created "tbl_notification" table`);
+        return {
+            createTable
+        };
+    } catch (error) {
+        console.error('Error seeding notification:', error);
+        throw error;
+    }
+}
+async function seedSalary() {
+    try {
+        const createTable = await pool.query(`
+            CREATE TABLE IF NOT EXISTS tbl_salary
+            (
+                id uuid DEFAULT uuid_generate_v4() PRIMARY KEY UNIQUE,
+                user_id uuid,
+                salary_month character varying(10),
+                bonus integer DEFAULT 0,
+                bonus_descr text,
+                expense integer DEFAULT 0,
+                expense_descr text,
+                salary numeric DEFAULT 0,
+                total_month_days integer DEFAULT 0,
+                free_leave numeric DEFAULT 0,
+                paid_leave numeric DEFAULT 0,
+                weekend_cnt integer DEFAULT 0,
+                holiday_cnt integer DEFAULT 0,
+                deduct_days numeric DEFAULT 0,
+                present_days numeric DEFAULT 0,
+                salary_per_day numeric DEFAULT 0,
+                payable_amt numeric DEFAULT 0,
+                total_payable_amt numeric DEFAULT 0,
+                salary_data text,
                 entry_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP
             )
         `);
@@ -374,6 +411,7 @@ async function main() {
     await seedSettings();
     await seedHoliday();
     await seedNotification();
+    await seedSalary();
   
     return;
     // await client.end();
