@@ -138,8 +138,8 @@ router.put('/clockout', fetchuser, upload.none(), [], async (req, res)=>{
             let time_update = [];
             time_update['end_time'] = 'NOW()';
             time_update['total_time'] = seconds;
-            time_update['reason'] = reason;
-            time_update['work_details'] = work_detail;
+            time_update['reason'] = encodeURI(reason);
+            time_update['work_details'] = encodeURI(work_detail);
             await dbUtils.update('tbl_employee_time', time_update, "id='"+account.id+"'");
         }
         res.json({ status: 1, message: 'success'});
@@ -165,7 +165,7 @@ router.put('/extra-break', fetchuser, upload.none(), [], async (req, res)=>{
             let time_update = [];
             time_update['end_time'] = 'NOW()';
             time_update['total_time'] = seconds;
-            time_update['reason'] = break_reason;
+            time_update['reason'] = encodeURI(break_reason);
             await dbUtils.update('tbl_employee_time', time_update, "id='"+account.id+"'");
 
             let timeData = [];
