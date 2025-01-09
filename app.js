@@ -10,7 +10,8 @@ const app = express();
 app.use(cors({ origin: 'https://unixel-infotech.vercel.app' }));
 app.use(compression());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('static'));
+// app.use(express.static('static'));
+app.use(express.static('public'));
 
 // const port = process.env.PORT;
 // client.connect();

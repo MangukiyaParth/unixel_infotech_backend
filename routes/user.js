@@ -249,6 +249,8 @@ router.get('/accountbyid', fetchuser, upload.none(), [], async (req, res)=>{
             u.account_no,
             u.branch_name,
             u.ifsc_code,
+            u.pan_no,
+            u.adhar_no,
             u.adhar_front,
             u.adhar_back,
             u.pan_front,
@@ -386,7 +388,7 @@ router.post('/login', upload.none(), [body('email', 'Enter a email').exists(),bo
 // Update a Profile 
 router.put('/profile', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
-    const { profile_pic, address, marital_status, bank_name, account_no, branch_name, ifsc_code, adhar_front, adhar_back, pan_front, pan_back, father_name, mother_name, father_contact, mother_contact} = req.body;
+    const { profile_pic, address, marital_status, bank_name, account_no, branch_name, ifsc_code, adhar_no, pan_no, adhar_front, adhar_back, pan_front, pan_back, father_name, mother_name, father_contact, mother_contact} = req.body;
     try{
         const user = await dbUtils.execute(`SELECT id FROM tbl_users WHERE id = '${req.user.id}'`);
         if(user && user.length > 0){
@@ -404,6 +406,8 @@ router.put('/profile', fetchuser, upload.none(), [], async (req, res)=>{
             userData['account_no'] = account_no;
             userData['branch_name'] = branch_name;
             userData['ifsc_code'] = ifsc_code;
+            userData['pan_no'] = pan_no;
+            userData['adhar_no'] = adhar_no;
             userData['adhar_front'] = adhar_front;
             userData['adhar_front_id'] = adharFrontId[0];
             userData['adhar_back'] = adhar_back;
@@ -440,7 +444,10 @@ router.get('/employee', fetchuser, upload.none(), [], async (req, res)=>{
 		const users = await dbUtils.execute(`SELECT
                 u.id,
                 et.employeetype,
-                u.name
+                u.name,
+                u.bank_name,
+                u.account_no,
+                u.pan_no
             FROM tbl_users u
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             WHERE u.usertype != '${process.env.NEXT_PUBLIC_MAINUTYPE}' ${extraWhere}`);

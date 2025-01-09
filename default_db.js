@@ -30,6 +30,8 @@ async function seedUsers() {
                 account_no text NULL,
                 branch_name text NULL,
                 ifsc_code text NULL,
+                pan_no character varying(20) NULL,
+                adhar_no character varying(20) NULL,
                 adhar_front text NULL,
                 adhar_front_id uuid NULL,
                 adhar_back text NULL,
@@ -365,6 +367,10 @@ async function seedSalary() {
                 id uuid DEFAULT uuid_generate_v4() PRIMARY KEY UNIQUE,
                 user_id uuid,
                 salary_month character varying(10),
+                job_title character varying(50) NOT NULL,
+                bank_name character varying(100) NULL,
+                account_no character varying(25) NULL,
+                pan_no character varying(20) NULL,
                 bonus integer DEFAULT 0,
                 bonus_descr text,
                 expense integer DEFAULT 0,
@@ -385,19 +391,19 @@ async function seedSalary() {
             )
         `);
 
-        console.log(`Created "tbl_notification" table`);
+        console.log(`Created "tbl_salary" table`);
         return {
             createTable
         };
     } catch (error) {
-        console.error('Error seeding notification:', error);
+        console.error('Error seeding salary:', error);
         throw error;
     }
 }
 
 async function main() {
-    await client.connect();
-    client.on('error', (err) => {
+    await pool.connect();
+    pool.on('error', (err) => {
         console.error('something bad has happened!', err.stack)
     })
   

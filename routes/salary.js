@@ -2,13 +2,17 @@ const express = require('express');
 const router = express.Router();
 var fetchuser = require('../middlewere/fetchuser');
 var dbUtils = require('../helper/index').Db;
+var generalUtils = require('../helper/index').general;
 const multer = require('multer');
 const upload = multer();
+import path from 'path';
+// const PDFDocument = require('pdfkit');
+const fs = require('fs');
 
-// Create a Leave
+// Create a Salary
 router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0; 
-    const {employee, format_month, bonus, bonus_descr, expense, expense_descr, salary_data} = req.body;
+    const {employee, format_month, job_title, pan_no, bank_name, account_no, bonus, bonus_descr, expense, expense_descr, weekend_cnt, holiday_cnt, free_leave, paid_leave, salary_data} = req.body;
     // console.log(month);
     const month = decodeURI(format_month);
     try{
@@ -21,16 +25,20 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
             let salaryData = [];
             salaryData['user_id'] = employee;
             salaryData['salary_month'] = month;
+            salaryData['job_title'] = job_title;
+            salaryData['pan_no'] = pan_no;
+            salaryData['bank_name'] = bank_name;
+            salaryData['account_no'] = account_no;
             salaryData['bonus'] = bonus;
             salaryData['bonus_descr'] = bonus_descr;
             salaryData['expense'] = expense;
             salaryData['expense_descr'] = expense_descr;
             salaryData['salary'] = parseFloat(salary_details?.salary.toString());
             salaryData['total_month_days'] = parseInt(salary_details?.total_month_days.toString());
-            salaryData['free_leave'] = parseFloat(salary_details?.free_leave.toString());
-            salaryData['paid_leave'] = parseFloat(salary_details?.paid_leave.toString());
-            salaryData['weekend_cnt'] = parseInt(salary_details?.weekend_cnt.toString());
-            salaryData['holiday_cnt'] = parseInt(salary_details?.holiday_cnt.toString());
+            salaryData['free_leave'] = parseFloat((free_leave ?? 0).toString());
+            salaryData['paid_leave'] = parseFloat((paid_leave ?? 0).toString());
+            salaryData['weekend_cnt'] = parseInt(weekend_cnt.toString());
+            salaryData['holiday_cnt'] = parseInt(holiday_cnt.toString());
             salaryData['deduct_days'] = parseFloat(salary_details?.deduct_days.toString());
             salaryData['present_days'] = parseFloat(salary_details?.present_days.toString());
             salaryData['salary_per_day'] = parseFloat(salary_details?.salary_per_day.toString());
@@ -49,7 +57,6 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
 router.delete('/', fetchuser, upload.none(), [], async (req, res)=>{
     let status = 0;
     const {id} = req.body;
-    console.log(id);
     try{
         // Check Song Exist
         const leave = await dbUtils.execute(`SELECT id FROM tbl_salary WHERE id = '${id}'`);
@@ -152,6 +159,413 @@ router.get('/detail', fetchuser, upload.none(), [], async (req, res)=>{
         res.json({ status: 1, res_data: salaryData});
     } catch (error){
         res.status(500).json({ status:status, error: "Internal server error"});
+    }
+});
+
+router.get('/slip1', upload.none(), [], async (req, res)=>{
+    let { id } = req.query;
+    try {
+        // const salaryData = await dbUtils.execute_single(`SELECT s.*, u.name
+        //     FROM tbl_salary s
+        //     join tbl_users u on u.id = s.user_id 
+        //     WHERE s.id = '${id}'`);
+        // const doc = new PDFDocument({ size: 'A4', margins: {
+        //     top: 0,
+        //     bottom: 0,
+        //     left: 50,
+        //     right: 50
+        //   } });
+            
+        // // 🎨 Background Color
+        // // doc.rect(0, 0, doc.page.width, doc.page.height).fill('#F4F4F4');
+
+        // // 🔹 Load Company Logo
+        // const logoPath = path.join(process.cwd(), 'public', 'assets', 'unixel.png');
+        // if (fs.existsSync(logoPath)) {
+        //     doc.image(logoPath, 50, 30, { width: 100 });
+        // }
+
+        // // 📝 Payslip Title
+        // doc.fontSize(20).fillColor('#333').text('Employee Payslip', { align: 'center' });
+        // doc.moveDown(1);
+
+        // // 📌 Employee Info
+        // doc.fontSize(12).fillColor('#000');
+        // doc.text(`Employee Name: John Doe`);
+        // doc.text(`Employee ID: EMP12345`);
+        // doc.text(`Department: Finance`);
+        // doc.text(`Date: September 2024`);
+        // doc.moveDown(2);
+
+        // // 🏛️ Salary Table
+        // const tableTop = doc.y;
+        // const rowHeight = 30;
+        // const columnWidths = [200, 200];
+
+        // const salaryData = [
+        //     ['Earnings', 'Amount (USD)'],
+        //     ['Basic Salary', '$3000'],
+        //     ['House Allowance', '$500'],
+        //     ['Transport', '$200'],
+        //     ['Deductions', '$-300'],
+        //     ['Total Pay', '$3400'],
+        // ];
+
+        // salaryData.forEach((row, rowIndex) => {
+        //     const y = tableTop + rowIndex * rowHeight;
+
+        //     row.forEach((cell, colIndex) => {
+        //         const x = 50 + columnWidths.slice(0, colIndex).reduce((a, b) => a + b, 0);
+
+        //         if (rowIndex === 0) {
+        //             // Header Styling
+        //             doc.fillColor('#ffffff').rect(x, y, columnWidths[colIndex], rowHeight).fill('#333');
+        //             doc.fillColor('#ffffff').text(cell, x + 10, y + 10);
+        //         } else {
+        //             // Alternate Row Colors
+        //             doc.fillColor(rowIndex % 2 === 0 ? '#f0f0f0' : '#ffffff')
+        //                 .rect(x, y, columnWidths[colIndex], rowHeight)
+        //                 .fill();
+        //             doc.fillColor('#000').text(cell, x + 10, y + 10);
+        //         }
+        //     });
+        // });
+
+        // doc.moveDown(2);
+
+        // // 📜 Notes Section
+        // doc.fontSize(10).fillColor('#666');
+        // doc.text('Note: This is a system-generated document.', { align: 'center' });
+
+        // doc.end();
+        // const buffers = [];
+
+        // doc.on('data', buffers.push.bind(buffers));
+        // doc.on('end', () => {
+        //     const pdfBuffer = Buffer.concat(buffers);
+
+        //     res.setHeader('Content-Type', 'application/pdf');
+        //     res.setHeader('Content-Length', pdfBuffer.length);
+        //     res.send(pdfBuffer);
+        // });
+        res.json({ status: 1, res_data: id});
+    } catch (error){
+        res.status(500).json({ status:0, error: "Internal server error"});
+    }
+});
+router.get('/slip', upload.none(), [], async (req, res)=>{
+    let { id } = req.query;
+    try {
+        var html_to_pdf = require('html-pdf-node');
+
+        const salaryData = await dbUtils.execute_single(`SELECT s.*, TO_CHAR(TO_DATE((s.salary_month || '-01'),'YYYY-MM-DD'),'Month YYYY') AS month_formated,
+            u.name, u.bank_name AS user_bank_name, u.account_no AS user_account_no, u.pan_no AS user_pan_no, TO_CHAR(TO_DATE(u.join_date,'DD/MM/YYYY'),'DD Mon YYYY') AS join_date, et.employeetype
+            FROM tbl_salary s
+            join tbl_users u on u.id = s.user_id 
+            LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
+            WHERE s.id = '${id}'`);
+        const leave_amt = ((salaryData.free_leave ?? 0) + (salaryData.paid_leave ?? 0)) * (salaryData.salary_per_day ?? 0);
+        let options = { format: 'A4' };
+        
+        const logoPath = path.join(process.cwd(), 'public', 'assets', 'unixel.png');
+        const logoBuffer = fs.readFileSync(logoPath);
+        const logoBase64 = logoBuffer.toString('base64');
+        let html = `
+        <style>
+            .pdf-body{
+                margin: 40px 30px; 
+                -webkit-print-color-adjust: exact; 
+                font-family: 'Mulish', sans-serif; 
+                font-optical-sizing: auto;
+                letter-spacing: 0.4;
+                color: #333;
+                font-size: 15px;
+            }
+            td, th {
+                padding: 8px;
+                font-size: 15px;
+            }
+            td {
+                color: #888;
+            }
+            th {
+                color: #444;
+                font-weight: 500;
+            }
+            .flex{
+                display: flex;
+            }
+            .items-center{
+                align-items: center;
+            }
+            .w-75{
+                width: 75%;
+            }
+            .w-25{
+                width: 25%;
+            }
+            .mt-3 {
+                margin-top: 10px;
+            }
+            .mb-3 {
+                margin-top: 10px;
+            }
+
+            .header {
+                margin-bottom: 15px;
+            }
+            .logo-img{
+                height: 70px; 
+                width: 160px;
+            }
+            .address-div {
+                margin-left: 15px; 
+                color: #777;
+            }
+            .header-amt-div {
+                padding: 5px 0 5px 20px;
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                padding: 15px 0px; 
+                background-color: #e7f2e5; 
+                border-radius: 10px; 
+                border: 1px dashed #a7e4aa;
+                font-size: 16px;
+                color: #444;
+            }
+            .header-amt-div .amount{
+                margin-top: 8px;
+                font-size: 20px; 
+                font-weight: 300;
+            }
+            .text-green{
+                color: #5fbd51;
+            }
+            .text-light{
+                color: #888;
+            }
+            .text-center{
+                text-align: center;
+            }
+            .underline {
+                text-decoration: underline;
+            }
+
+            hr{
+                display: block; 
+                height: 1px; 
+                border: 0; 
+                margin: 1em 0; 
+                padding: 0;
+            }
+            .lite-hr{
+                border-top: 1px solid #ccc; 
+            }
+            .slip-heading {
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                padding: 5px 0;
+            }
+            .dark-hr{
+                border-top: 1px solid #888; 
+            }
+
+            table{
+                width: 100%; 
+                text-align: left;
+                font-size: 16px;
+                border-collapse: collapse;
+            }
+            .box-table{
+                margin: 0 10px;
+            }
+            .box-table thead tr{
+                border: 1px solid #DDD;
+                background-color: #EEE;
+            }
+            .box-table tfoot tr{
+                border-top: 1px solid #DDD;
+                border-bottom: 1px solid #DDD;
+            }
+            .box-table thead th, .box-table tfoot th{
+                padding: 15px;
+            }
+            .box-table thead tr th:nth-child(2), .box-table tfoot th:nth-child(2){
+                text-align: right;
+            }
+            .box-table tbody th, .box-table tbody td{
+                padding: 8px 15px;
+            }
+            .box-table tbody th{
+                text-align: right;
+            }
+            .amount-div{
+                display: flex;
+                padding: 30px 10px;
+                margin: 25px 10px;
+                border-top: 2px daSHED #a7e4aa;
+                border-bottom: 2px daSHED #a7e4aa;
+                background-color: #f8fff8;
+            }
+            
+            .salary-detail{
+                padding: 0 20px 10px 20px;
+            }
+            .authority-detail{
+                margin-top: 100px;
+                margin-bottom: 60px;
+                padding: 20px;
+                display: flex;
+                justify-content: space-between;
+            }
+        </style>
+        <div class="pdf-body">
+            <div class="header flex items-center">
+                <div class="flex items-center w-75">
+                    <img src="data:image/png;base64,${logoBase64}" class="logo-img" />
+                    <div class="address-div">
+                        <sapn>317 - Silver Trade Center, Utran, Surat</span><br/>
+                        <span style="margin-top: 5px">+91 9524856521</span>
+                    </div>
+                </div>
+                <div class="w-25 header-amt-div">
+                    <span>Net Payable Amount</span>
+                    <span class="amount text-green">${await  generalUtils.INRFormat(parseFloat(salaryData.total_payable_amt))}</span>
+                </div>
+            </div>
+            <hr class="lite-hr" />
+            <div class="slip-heading">
+                Salary Slip - ${salaryData.month_formated}
+            </div>
+            <hr class="dark-hr" />
+            <div style="padding: 15px;">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style="width: 20%;">Employee Name</td>
+                            <th style="width: 40%;">: ${salaryData.name}</th>
+                            <td style="width: 20%;">Working Days</td>
+                            <th style="width: 20%;">: ${ (salaryData.total_month_days ?? 0) - parseInt((salaryData.weekend_cnt ?? 0).toString()) - parseInt((salaryData.holiday_cnt ?? 0).toString()) }</th>
+                        </tr>
+                        <tr>
+                            <td>Job Title</td>
+                            <th>: ${salaryData.job_title ?? salaryData.employeetype}</th>
+                            <td>Present Days</td>
+                            <th>: ${salaryData.present_days ?? 0}</th>
+                        </tr>
+                        <tr>
+                            <td>Bank Name</td>
+                            <th>: ${salaryData.bank_name ?? salaryData.user_bank_name}</th>
+                            <td>Holiday Days</td>
+                            <th>: ${salaryData.holiday_cnt ?? 0}</th>
+                        </tr>
+                        <tr>
+                            <td>Account Number</td>
+                            <th>: ${salaryData.account_no ?? salaryData.user_account_no}</th>
+                            <td>Weekoff Days</td>
+                            <th>: ${salaryData.weekend_cnt ?? 0}</th>
+                        </tr>
+                        <tr>
+                            <td>Joining Date</td>
+                            <th>: ${salaryData.join_date}</th>
+                            <td>Free Leave</td>
+                            <th>: ${salaryData.free_leave ?? 0}</th>
+                        </tr>
+                        <tr>
+                            <td>PAN Number</td>
+                            <th>: ${salaryData.user_pan_no ?? salaryData.pan_no}</th>
+                            <td>Paid Leave</td>
+                            <th>: ${salaryData.paid_leave ?? 0}</th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <hr class="dark-hr" />
+            <div class="flex">
+                <table class="box-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">Earning</th>
+                            <th style="width: 50%;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Basic</td>
+                            <th>${await  generalUtils.INRFormat(parseFloat(salaryData.salary))}</th>
+                        </tr>
+                        <tr>
+                            <td>Bonus</td>
+                            <th>${await  generalUtils.INRFormat(parseFloat(salaryData.bonus))}</th>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total Earning</th>
+                            <th>${await  generalUtils.INRFormat(parseFloat(salaryData.salary) + parseFloat(salaryData.bonus))}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+                <table class="box-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">Deduction</th>
+                            <th style="width: 50%;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Other Deduction</td>
+                            <th>${await  generalUtils.INRFormat(parseFloat(salaryData.expense))}</th>
+                        </tr>
+                        <tr>
+                            <td>Leave</td>
+                            <th>${await  generalUtils.INRFormat(leave_amt)}</th>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total Deduction</th>
+                            <th>${await  generalUtils.INRFormat(parseFloat(salaryData.expense) + parseFloat(leave_amt))}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="amount-div">
+                Total Net Payable Amount: <span class="text-green">&nbsp;${await  generalUtils.INRFormat(parseFloat(salaryData.total_payable_amt))}</span>&nbsp; ( ${await  generalUtils.price_in_words(parseFloat(salaryData.total_payable_amt))} Rupee Only )
+            </div>
+
+            <div class="salary-detail">
+                <div class="mb-3"><span class="text-light">Salary:</span>&nbsp;${await  generalUtils.INRFormat(parseFloat(salaryData.salary))}&nbsp;(${await  generalUtils.INRFormat(parseFloat(salaryData.salary_per_day))} Per Day)</div>
+                <div class="mb-3"><span class="text-light">Bonus:</span>&nbsp; ${(salaryData.expense) ? `${salaryData.bonus_descr} =` : '' } ${await  generalUtils.INRFormat(parseFloat(salaryData.bonus))}</div>
+                <div class="mb-3"><span class="text-light">Other Deduction:</span>&nbsp; ${(salaryData.expense) ? `${salaryData.expense_descr} =` : '' } ${await  generalUtils.INRFormat(parseFloat(salaryData.expense))}</div>
+            </div>
+            <div class="authority-detail">
+                <div>
+                    <span class="text-light underline">Authorised By:</span>
+                </div>
+                <div>
+                    <span class="text-light underline">Employee's Signature:</span>
+                </div>
+            </div>
+            <div class="mt-3 text-center text-light">
+                This is a system-generated payslip, hence the signature is not required.
+            </div>
+        </div>`;
+
+        let file = { content: html };
+        html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Length', pdfBuffer.length);
+            res.send(pdfBuffer);
+            // res.json({ status: 1, res_data: pdfBuffer });
+        });
+        // res.json({ status: 1, res_data: await generalUtils.INRFormat(salaryData.total_payable_amt)});
+    } catch (error){
+        res.status(500).json({ status:0, error: "Internal server error"});
     }
 });
 
