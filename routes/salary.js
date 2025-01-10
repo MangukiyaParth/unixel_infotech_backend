@@ -502,7 +502,7 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             console.log("call2", browser);
             const page = await browser.newPage();
             console.log("call3");
-            await page.setContent(htmlContent); // Set the HTML content to render
+            await page.setContent(html); // Set the HTML content to render
             console.log("call4");
             const pdfBuffer = await page.pdf({ format: 'A4' }); // Generate the PDF buffer
             await browser.close();
