@@ -482,14 +482,14 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
         //     args: ['--no-sandbox', '--disable-setuid-sandbox'],
         //     executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined, // Use system path if available
         // });
-        const executablePath = await chromium.executablePath;
-
-        console.log("Chromium Path:", executablePath);
+    
+        console.log("Launching Puppeteer...");
         const browser = await puppeteer.launch({
             args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
-            executablePath: await chromium.executablePath || '/usr/bin/chromium-browser',
-            headless: true,
+            executablePath: await chromium.executablePath,
+            headless: "new"
         });
+        console.log("Puppeteer Launched!");
 
         console.log("call2", browser);
         const page = await browser.newPage();
