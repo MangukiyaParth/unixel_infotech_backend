@@ -465,6 +465,8 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             </div>
         </div>`;
 
+        console.log("call1");
+
         // Launch the browser using chrome-aws-lambda's executable path
         const browser = await puppeteer.launch({
             executablePath: await chrome.executablePath, // Get path to the Chromium binary
@@ -473,10 +475,14 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             defaultViewport: chrome.defaultViewport,     // Default viewport
         });
 
+        console.log("call2");
         const page = await browser.newPage();
+        console.log("call3");
         await page.setContent(htmlContent); // Set the HTML content to render
+        console.log("call4");
         const pdfBuffer = await page.pdf({ format: 'A4' }); // Generate the PDF buffer
         await browser.close();
+        console.log("call5");
 
         // Send the PDF buffer as a response
         res.setHeader('Content-Type', 'application/pdf');
