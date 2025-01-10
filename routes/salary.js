@@ -463,28 +463,8 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
                 This is a system-generated payslip, hence the signature is not required.
             </div>
         </div>`;
-
-        console.log("call1");
-        // console.log(await chrome.executablePath);
-        // console.log(chrome.headless);
-        // console.log(chrome.args);
-        // console.log(chrome.defaultViewport);
-
-        // // Launch the browser using chrome-aws-lambda's executable path
-        // const browser = await puppeteer.launch({
-        //     executablePath: await chrome.executablePath, // Get path to the Chromium binary
-        //     headless: chrome.headless,                   // Ensure the browser runs in headless mode
-        //     args: chrome.args,                           // Arguments for launching Chromium
-        //     defaultViewport: chrome.defaultViewport,     // Default viewport
-        // });
-
-        // const browser = await puppeteer.launch({
-        //     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        //     executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined, // Use system path if available
-        // });
     
         try {
-            console.log("Launching Puppeteer...");
             const browser = await puppeteer.launch({
                 args: [
                     ...chromium.args, 
@@ -497,33 +477,20 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
                 executablePath: await chromium.executablePath() || '/usr/bin/google-chrome-stable',
                 headless: chromium.headless
             });
-            console.log("Puppeteer Launched!");
-
-            console.log("call2", browser);
             const page = await browser.newPage();
-            console.log("call3");
             await page.setContent(html); // Set the HTML content to render
-            console.log("call4");
             const pdfBuffer = await page.pdf({ format: 'A4' }); // Generate the PDF buffer
             await browser.close();
-            console.log("call5");
 
             // Send the PDF buffer as a response
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Length', pdfBuffer.length);
-            res.send(pdfBuffer);
+            // res.setHeader('Content-Type', 'application/pdf');
+            // res.setHeader('Content-Length', pdfBuffer.length);
+            // res.send(pdfBuffer);
+            res.json({ status: 1, res_data: pdfBuffer });
         } catch (error) {
             console.error("Error during Puppeteer execution:", error);
             res.status(500).json({ error: "Internal server error", details: error.message });
         }
-        // let file = { content: html };
-        // html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
-        //     // res.setHeader('Content-Type', 'application/pdf');
-        //     // res.setHeader('Content-Length', pdfBuffer.length);
-        //     // res.send(pdfBuffer);
-        //     res.json({ status: 1, res_data: pdfBuffer });
-        // });
-        // res.json({ status: 1, res_data: await generalUtils.INRFormat(salaryData.total_payable_amt)});
     } catch (error){
         res.status(500).json({ status:0, error: "Internal server error"});
     }
