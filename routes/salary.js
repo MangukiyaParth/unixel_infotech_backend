@@ -5,9 +5,8 @@ var dbUtils = require('../helper/index').Db;
 var generalUtils = require('../helper/index').general;
 const multer = require('multer');
 const upload = multer();
-
 const puppeteer = require('puppeteer-core');
-const chrome = require('chrome-aws-lambda');
+const chrome = require('chrome-aws-lambda'); // Provides Chromium for Lambda and serverless
 const html_to_pdf = require('html-pdf-node');
 const path = require('path');
 const fs = require('fs');
@@ -168,7 +167,6 @@ router.get('/detail', fetchuser, upload.none(), [], async (req, res)=>{
 router.get('/slip', upload.none(), [], async (req, res)=>{
     let { id } = req.query;
     try {
-
         const salaryData = await dbUtils.execute_single(`SELECT s.*, TO_CHAR(TO_DATE((s.salary_month || '-01'),'YYYY-MM-DD'),'Month YYYY') AS month_formated,
             u.name, u.bank_name AS user_bank_name, u.account_no AS user_account_no, u.pan_no AS user_pan_no, TO_CHAR(TO_DATE(u.join_date,'DD/MM/YYYY'),'DD Mon YYYY') AS join_date, et.employeetype
             FROM tbl_salary s
@@ -466,33 +464,31 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
                 This is a system-generated payslip, hence the signature is not required.
             </div>
         </div>`;
-        console.log("run");
-        const browser = await puppeteer.launch({
-            executablePath: await chrome.executablePath,
-            headless: chrome.headless,
-            args: chrome.args,
-            defaultViewport: chrome.defaultViewport,
-        });
-        console.log("run1");
-        
-        const page = await browser.newPage();
-        console.log("run2");
-        await page.setContent(html);
-        console.log("run3");
-        const pdfBuffer = await page.pdf();
-        console.log("run4");
-        await browser.close();
-        console.log("run5");
 
+        // Launch the browser using chrome-aws-lambda's executable path
+        const browser = await puppeteer.launch({
+            executablePath: await chrome.executablePath, // Get path to the Chromium binary
+            headless: chrome.headless,                   // Ensure the browser runs in headless mode
+            args: chrome.args,                           // Arguments for launching Chromium
+            defaultViewport: chrome.defaultViewport,     // Default viewport
+        });
+
+        const page = await browser.newPage();
+        await page.setContent(htmlContent); // Set the HTML content to render
+        const pdfBuffer = await page.pdf({ format: 'A4' }); // Generate the PDF buffer
+        await browser.close();
+
+        // Send the PDF buffer as a response
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Length', pdfBuffer.length);
         res.send(pdfBuffer);
+
         // let file = { content: html };
         // html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
-            //     res.setHeader('Content-Type', 'application/pdf');
-            //     res.setHeader('Content-Length', pdfBuffer.length);
-            //     res.send(pdfBuffer);
-            //     res.json({ status: 1, res_data: pdfBuffer });
+        //     // res.setHeader('Content-Type', 'application/pdf');
+        //     // res.setHeader('Content-Length', pdfBuffer.length);
+        //     // res.send(pdfBuffer);
+        //     res.json({ status: 1, res_data: pdfBuffer });
         // });
         // res.json({ status: 1, res_data: await generalUtils.INRFormat(salaryData.total_payable_amt)});
     } catch (error){
