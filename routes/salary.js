@@ -483,35 +483,39 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
         //     executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined, // Use system path if available
         // });
     
-        console.log("Launching Puppeteer...");
-        const browser = await puppeteer.launch({
-            args: [
-                ...chromium.args, 
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--single-process'
-            ],
-            executablePath: await chromium.executablePath,
-            headless: "new"
-        });
-        console.log("Puppeteer Launched!");
+        try {
+            console.log("Launching Puppeteer...");
+            const browser = await puppeteer.launch({
+                args: [
+                    ...chromium.args, 
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--single-process'
+                ],
+                executablePath: await chromium.executablePath,
+                headless: "new"
+            });
+            console.log("Puppeteer Launched!");
 
-        console.log("call2", browser);
-        const page = await browser.newPage();
-        console.log("call3");
-        await page.setContent(htmlContent); // Set the HTML content to render
-        console.log("call4");
-        const pdfBuffer = await page.pdf({ format: 'A4' }); // Generate the PDF buffer
-        await browser.close();
-        console.log("call5");
+            console.log("call2", browser);
+            const page = await browser.newPage();
+            console.log("call3");
+            await page.setContent(htmlContent); // Set the HTML content to render
+            console.log("call4");
+            const pdfBuffer = await page.pdf({ format: 'A4' }); // Generate the PDF buffer
+            await browser.close();
+            console.log("call5");
 
-        // Send the PDF buffer as a response
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Length', pdfBuffer.length);
-        res.send(pdfBuffer);
-
+            // Send the PDF buffer as a response
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Length', pdfBuffer.length);
+            res.send(pdfBuffer);
+        } catch (error) {
+            console.error("Error during Puppeteer execution:", error);
+            res.status(500).json({ error: "Internal server error", details: error.message });
+        }
         // let file = { content: html };
         // html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
         //     // res.setHeader('Content-Type', 'application/pdf');
