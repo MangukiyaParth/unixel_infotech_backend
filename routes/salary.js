@@ -6,7 +6,7 @@ var generalUtils = require('../helper/index').general;
 const multer = require('multer');
 const upload = multer();
 const puppeteer = require('puppeteer-core');
-const chromium = require('chrome-aws-lambda');
+const chromium = require('@sparticuz/chromium');
 const path = require('path');
 const fs = require('fs');
 
@@ -494,8 +494,8 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
                     '--disable-gpu',
                     '--single-process'
                 ],
-                executablePath: await chromium.executablePath,
-                headless: "new"
+                executablePath: await chromium.executablePath() || '/usr/bin/google-chrome-stable',
+                headless: chromium.headless
             });
             console.log("Puppeteer Launched!");
 
