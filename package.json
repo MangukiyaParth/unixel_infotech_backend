@@ -20,6 +20,7 @@
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
+    "chrome-aws-lambda": "^10.1.0",
     "compression": "^1.7.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -28,6 +29,7 @@
     "html-pdf-node": "^1.0.8",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "puppeteer-core": "^23.11.1"
   }
 }
