@@ -174,6 +174,7 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             WHERE s.id = '${id}'`);
         console.log("Log1");
+        console.log(salaryData);
         console.log((salaryData.free_leave && salaryData.free_leave != '') ? salaryData.free_leave : 0);
         console.log((salaryData.paid_leave && salaryData.paid_leave != '') ? salaryData.paid_leave : 0);
         console.log(salaryData.salary_per_day ?? 0);
