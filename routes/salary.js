@@ -6,8 +6,7 @@ var generalUtils = require('../helper/index').general;
 const multer = require('multer');
 const upload = multer();
 const puppeteer = require('puppeteer-core');
-const chrome = require('chrome-aws-lambda'); // Provides Chromium for Lambda and serverless
-const html_to_pdf = require('html-pdf-node');
+const chromium = require('chrome-aws-lambda');
 const path = require('path');
 const fs = require('fs');
 
@@ -173,20 +172,12 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             join tbl_users u on u.id = s.user_id 
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             WHERE s.id = '${id}'`);
-        console.log("Log1");
-        console.log(salaryData);
-        console.log((salaryData.free_leave && salaryData.free_leave != '') ? salaryData.free_leave : 0);
-        console.log((salaryData.paid_leave && salaryData.paid_leave != '') ? salaryData.paid_leave : 0);
-        console.log(salaryData.salary_per_day ?? 0);
         const leave_amt = (((salaryData.free_leave && salaryData.free_leave != '') ? salaryData.free_leave : 0) + ((salaryData.paid_leave && salaryData.paid_leave != '') ? salaryData.paid_leave : 0)) * (salaryData.salary_per_day ?? 0);
-        console.log("Log2");
         let options = { format: 'A4' };
-        console.log("Log3");
         
         const logoPath = path.join(process.cwd(), 'public', 'assets', 'unixel.png');
         const logoBuffer = fs.readFileSync(logoPath);
         const logoBase64 = logoBuffer.toString('base64');
-        console.log("Log4");
         let html = `
         <style>
             .pdf-body{
@@ -474,16 +465,30 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
         </div>`;
 
         console.log("call1");
+        // console.log(await chrome.executablePath);
+        // console.log(chrome.headless);
+        // console.log(chrome.args);
+        // console.log(chrome.defaultViewport);
 
-        // Launch the browser using chrome-aws-lambda's executable path
+        // // Launch the browser using chrome-aws-lambda's executable path
+        // const browser = await puppeteer.launch({
+        //     executablePath: await chrome.executablePath, // Get path to the Chromium binary
+        //     headless: chrome.headless,                   // Ensure the browser runs in headless mode
+        //     args: chrome.args,                           // Arguments for launching Chromium
+        //     defaultViewport: chrome.defaultViewport,     // Default viewport
+        // });
+
+        // const browser = await puppeteer.launch({
+        //     args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        //     executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined, // Use system path if available
+        // });
         const browser = await puppeteer.launch({
-            executablePath: await chrome.executablePath, // Get path to the Chromium binary
-            headless: chrome.headless,                   // Ensure the browser runs in headless mode
-            args: chrome.args,                           // Arguments for launching Chromium
-            defaultViewport: chrome.defaultViewport,     // Default viewport
+            args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+            executablePath: await chromium.executablePath || '/usr/bin/chromium-browser',
+            headless: true,
         });
 
-        console.log("call2");
+        console.log("call2", browser);
         const page = await browser.newPage();
         console.log("call3");
         await page.setContent(htmlContent); // Set the HTML content to render
