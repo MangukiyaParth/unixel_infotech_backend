@@ -172,7 +172,7 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             join tbl_users u on u.id = s.user_id 
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             WHERE s.id = '${id}'`);
-        const leave_amt = (((salaryData.free_leave && salaryData.free_leave != '') ? salaryData.free_leave : 0) + ((salaryData.paid_leave && salaryData.paid_leave != '') ? salaryData.paid_leave : 0)) * (salaryData.salary_per_day ?? 0);
+        const leave_amt = ((salaryData.paid_leave && salaryData.paid_leave != '') ? salaryData.paid_leave : 0) * (salaryData.salary_per_day ?? 0);
         let options = { format: 'A4' };
         
         const logoPath = path.join(process.cwd(), 'public', 'assets', 'unixel.png');
@@ -322,7 +322,7 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
                 padding: 0 20px 10px 20px;
             }
             .authority-detail{
-                margin-top: 100px;
+                margin-top: 80px;
                 margin-bottom: 60px;
                 padding: 20px;
                 display: flex;
