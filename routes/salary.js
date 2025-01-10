@@ -173,12 +173,16 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             join tbl_users u on u.id = s.user_id 
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
             WHERE s.id = '${id}'`);
+        console.log("Log1");
         const leave_amt = ((salaryData.free_leave ?? 0) + (salaryData.paid_leave ?? 0)) * (salaryData.salary_per_day ?? 0);
+        console.log("Log2");
         let options = { format: 'A4' };
+        console.log("Log3");
         
         const logoPath = path.join(process.cwd(), 'public', 'assets', 'unixel.png');
         const logoBuffer = fs.readFileSync(logoPath);
         const logoBase64 = logoBuffer.toString('base64');
+        console.log("Log4");
         let html = `
         <style>
             .pdf-body{
