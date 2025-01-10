@@ -56,10 +56,10 @@ router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
                 const monthly_leave_limit = monthly_leave.free_leave_limit;
                 const join_date = monthly_leave.join_date;
                 const start_year = (start_date.split('-')[0] - 1);
-                const prev_year_chk = (start_year - 1)+""+(monthly_leave.join_date.replace("-",""));
+                const curr_year_chk = start_year+""+(monthly_leave.join_date.replace("-",""));
                 const curr_full_date_chk = start_date.replaceAll("-","");
                 let leave_tenure_start_date = `${start_year}-${join_date}`;
-                if(parseInt(prev_year_chk) > parseInt(curr_full_date_chk)){
+                if(parseInt(curr_year_chk) > parseInt(curr_full_date_chk)){
                     leave_tenure_start_date = `${start_year - 1}-${join_date}`;
                 }
                 const monthly_taken_paid_leave = await dbUtils.execute_single(`SELECT SUM(CASE WHEN (ld.leave_time = '3') THEN 1 ELSE 0.5 END) AS monthly_leave 
@@ -158,10 +158,10 @@ router.put('/', fetchuser, upload.none(), [], async (req, res)=>{
                 const joinData = await dbUtils.execute_single(`SELECT TO_CHAR(TO_DATE(join_date,'DD/MM/YYYY'),'MM-DD') AS join_date FROM tbl_users WHERE id = '${req.user.id}'`);
                 const join_date = joinData.join_date;
                 const start_year = (start_date.split('-')[0] - 1);
-                const prev_year_chk = (start_year - 1)+""+(joinData.join_date.replace("-",""));
+                const curr_year_chk = start_year+""+(joinData.join_date.replace("-",""));
                 const curr_full_date_chk = start_date.replaceAll("-","");
                 let leave_tenure_start_date = `${start_year}-${join_date}`;
-                if(parseInt(prev_year_chk) > parseInt(curr_full_date_chk)){
+                if(parseInt(curr_year_chk) > parseInt(curr_full_date_chk)){
                     leave_tenure_start_date = `${start_year - 1}-${join_date}`;
                 }
 

@@ -28,10 +28,10 @@ router.get('/', fetchuser, upload.none(), [], async (req, res)=>{
             (SELECT CONCAT(' ',late_time,':00') FROM tbl_settings LIMIT 1) AS office_end_time,
             (SELECT TO_CHAR(TO_DATE(join_date,'DD/MM/YYYY'),'MM-DD') FROM tbl_users WHERE id = '${req.user.id}') AS join_date`);
         const join_date = settingData.join_date;
-        const prev_year_chk = (curr_year - 1)+""+(settingData.join_date.replace("-",""));
+        const curr_year_chk = curr_year+""+(settingData.join_date.replace("-",""));
         const curr_full_date_chk = curr_full_date.replaceAll("-","");
         let leave_tenure_start_date = `${curr_year}-${join_date}`;
-        if(parseInt(prev_year_chk) > parseInt(curr_full_date_chk)){
+        if(parseInt(curr_year_chk) > parseInt(curr_full_date_chk)){
             leave_tenure_start_date = `${curr_year - 1}-${join_date}`;
         }
         const birthdayData = await dbUtils.execute(`select u.id,u.profile_pic,u.profile_color,ut.usertype, u.usertype AS usertypeid, et.employeetype, u.name, u.birth_date, 
