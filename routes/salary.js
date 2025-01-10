@@ -162,98 +162,7 @@ router.get('/detail', fetchuser, upload.none(), [], async (req, res)=>{
     }
 });
 
-router.get('/slip1', upload.none(), [], async (req, res)=>{
-    let { id } = req.query;
-    try {
-        // const salaryData = await dbUtils.execute_single(`SELECT s.*, u.name
-        //     FROM tbl_salary s
-        //     join tbl_users u on u.id = s.user_id 
-        //     WHERE s.id = '${id}'`);
-        // const doc = new PDFDocument({ size: 'A4', margins: {
-        //     top: 0,
-        //     bottom: 0,
-        //     left: 50,
-        //     right: 50
-        //   } });
-            
-        // // 🎨 Background Color
-        // // doc.rect(0, 0, doc.page.width, doc.page.height).fill('#F4F4F4');
-
-        // // 🔹 Load Company Logo
-        // const logoPath = path.join(process.cwd(), 'public', 'assets', 'unixel.png');
-        // if (fs.existsSync(logoPath)) {
-        //     doc.image(logoPath, 50, 30, { width: 100 });
-        // }
-
-        // // 📝 Payslip Title
-        // doc.fontSize(20).fillColor('#333').text('Employee Payslip', { align: 'center' });
-        // doc.moveDown(1);
-
-        // // 📌 Employee Info
-        // doc.fontSize(12).fillColor('#000');
-        // doc.text(`Employee Name: John Doe`);
-        // doc.text(`Employee ID: EMP12345`);
-        // doc.text(`Department: Finance`);
-        // doc.text(`Date: September 2024`);
-        // doc.moveDown(2);
-
-        // // 🏛️ Salary Table
-        // const tableTop = doc.y;
-        // const rowHeight = 30;
-        // const columnWidths = [200, 200];
-
-        // const salaryData = [
-        //     ['Earnings', 'Amount (USD)'],
-        //     ['Basic Salary', '$3000'],
-        //     ['House Allowance', '$500'],
-        //     ['Transport', '$200'],
-        //     ['Deductions', '$-300'],
-        //     ['Total Pay', '$3400'],
-        // ];
-
-        // salaryData.forEach((row, rowIndex) => {
-        //     const y = tableTop + rowIndex * rowHeight;
-
-        //     row.forEach((cell, colIndex) => {
-        //         const x = 50 + columnWidths.slice(0, colIndex).reduce((a, b) => a + b, 0);
-
-        //         if (rowIndex === 0) {
-        //             // Header Styling
-        //             doc.fillColor('#ffffff').rect(x, y, columnWidths[colIndex], rowHeight).fill('#333');
-        //             doc.fillColor('#ffffff').text(cell, x + 10, y + 10);
-        //         } else {
-        //             // Alternate Row Colors
-        //             doc.fillColor(rowIndex % 2 === 0 ? '#f0f0f0' : '#ffffff')
-        //                 .rect(x, y, columnWidths[colIndex], rowHeight)
-        //                 .fill();
-        //             doc.fillColor('#000').text(cell, x + 10, y + 10);
-        //         }
-        //     });
-        // });
-
-        // doc.moveDown(2);
-
-        // // 📜 Notes Section
-        // doc.fontSize(10).fillColor('#666');
-        // doc.text('Note: This is a system-generated document.', { align: 'center' });
-
-        // doc.end();
-        // const buffers = [];
-
-        // doc.on('data', buffers.push.bind(buffers));
-        // doc.on('end', () => {
-        //     const pdfBuffer = Buffer.concat(buffers);
-
-        //     res.setHeader('Content-Type', 'application/pdf');
-        //     res.setHeader('Content-Length', pdfBuffer.length);
-        //     res.send(pdfBuffer);
-        // });
-        res.json({ status: 1, res_data: id});
-    } catch (error){
-        res.status(500).json({ status:0, error: "Internal server error"});
-    }
-});
-router.get('/slip', upload.none(), [], async (req, res)=>{
+router.get('/slip', fetchuser, upload.none(), [], async (req, res)=>{
     let { id } = req.query;
     try {
         var html_to_pdf = require('html-pdf-node');
@@ -558,10 +467,10 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
 
         let file = { content: html };
         html_to_pdf.generatePdf(file, options).then(pdfBuffer => {
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Length', pdfBuffer.length);
-            res.send(pdfBuffer);
-            // res.json({ status: 1, res_data: pdfBuffer });
+            // res.setHeader('Content-Type', 'application/pdf');
+            // res.setHeader('Content-Length', pdfBuffer.length);
+            // res.send(pdfBuffer);
+            res.json({ status: 1, res_data: pdfBuffer });
         });
         // res.json({ status: 1, res_data: await generalUtils.INRFormat(salaryData.total_payable_amt)});
     } catch (error){
