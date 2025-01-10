@@ -323,7 +323,7 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             }
             .authority-detail{
                 margin-top: 80px;
-                margin-bottom: 60px;
+                margin-bottom: 30px;
                 padding: 20px;
                 display: flex;
                 justify-content: space-between;
