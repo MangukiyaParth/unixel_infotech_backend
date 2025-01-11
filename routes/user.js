@@ -162,7 +162,8 @@ router.get('/accounts', fetchuser, upload.none(), [], async (req, res)=>{
             u.mother_name,
             u.father_contact,
             u.mother_contact,
-            u.marital_status
+            u.marital_status,
+            (SELECT string_agg(TO_CHAR(start_time, 'DD/MM/YYYY'),', ') FROM tbl_employee_time_history WHERE user_id = u.id AND status != 1) AS pending_timer_req_dates
 		FROM tbl_users u
 		LEFT JOIN tbl_states s ON u.stateId = s.id
 		LEFT JOIN tbl_cities c ON u.cityId = c.id
@@ -450,7 +451,8 @@ router.get('/employee', fetchuser, upload.none(), [], async (req, res)=>{
                 u.pan_no
             FROM tbl_users u
             LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
-            WHERE u.usertype != '${process.env.NEXT_PUBLIC_MAINUTYPE}' ${extraWhere}`);
+            WHERE u.usertype != '${process.env.NEXT_PUBLIC_MAINUTYPE}' ${extraWhere}
+            ORDER BY u.name`);
         if(!users){
             return res.status(400).json({status:0, error: "User not found."})
         }
