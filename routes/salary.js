@@ -372,7 +372,7 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
                             <th>: ${salaryData.holiday_cnt ?? 0}</th>
                         </tr>
                         <tr>
-                            <td>Account Number</td>
+                            <td>Account No</td>
                             <th>: ${salaryData.account_no ?? salaryData.user_account_no}</th>
                             <td>Weekoff Days</td>
                             <th>: ${salaryData.weekend_cnt ?? 0}</th>
