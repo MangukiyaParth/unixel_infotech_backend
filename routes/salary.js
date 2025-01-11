@@ -10,6 +10,7 @@ const chromium = require('@sparticuz/chromium');
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require("nodemailer");
+const isLocal = process.env.NODE_ENV === 'development';
 
 // Create a Salary
 router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
@@ -165,7 +166,7 @@ router.get('/detail', fetchuser, upload.none(), [], async (req, res)=>{
 });
 
 router.get('/slip', upload.none(), [], async (req, res)=>{
-    let { id, sned_mail } = req.query;
+    let { id } = req.query;
     try {
         const salaryData = await dbUtils.execute_single(`SELECT s.*, TO_CHAR(TO_DATE((s.salary_month || '-01'),'YYYY-MM-DD'),'Month YYYY') AS month_formated,
             u.name, u.bank_name AS user_bank_name, u.account_no AS user_account_no, u.pan_no AS user_pan_no, TO_CHAR(TO_DATE(u.join_date,'DD/MM/YYYY'),'DD Mon YYYY') AS join_date, et.employeetype
@@ -467,7 +468,7 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
     
         try {
             const browser = await puppeteer.launch({
-                args: [
+                args: isLocal ? [] : [
                     ...chromium.args, 
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
@@ -475,7 +476,9 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
                     '--disable-gpu',
                     '--single-process'
                 ],
-                executablePath: await chromium.executablePath() || '/usr/bin/google-chrome-stable',
+                executablePath: isLocal
+                    ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' // Local Chromium
+                    : await chromium.executablePath() || '/usr/bin/google-chrome-stable',
                 headless: chromium.headless
             });
             const page = await browser.newPage();
@@ -483,39 +486,16 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             const pdfBuffer = await page.pdf({ format: 'A4' }); // Generate the PDF buffer
             await browser.close();
 
-            if(sned_mail){
-                const transporter = nodemailer.createTransport({
-                    host: "smtp.gmail.com",
-                    port: 4665,
-                    secure: true, // true for port 465, false for other ports
-                    auth: {
-                      user: "mparth141@gmail.email",
-                      pass: "Parth@10897$PA",
-                    },
-                });
-
-                const info = await transporter.sendMail({
-                    from: '"Unixel Infotech" <mparth141@gmail.email>', // sender address
-                    to: "marshalmangukiya@gmail.com", // list of receivers
-                    subject: "Hello ✔", // Subject line
-                    text: "Hello Unixel?", // plain text body
-                    html: "<b>Hello Unixel?</b>", // html body
-                });
-            
-                console.log("Message sent: %s", info.messageId);
-            }
-            else{
-                // Send the PDF buffer as a response
-                // res.setHeader('Content-Type', 'application/pdf');
-                // res.setHeader('Content-Length', pdfBuffer.length);
-                // res.send(pdfBuffer);
-                const resp = {
-                    "pdf": pdfBuffer,
-                    "id": id,
-                    "file_name": `Salary Slip ~ ${salaryData.name} | ${salaryData.month_formated}`
-                };
-                res.json({ status: 1, res_data: resp });
-            }
+            // Send the PDF buffer as a response
+            // res.setHeader('Content-Type', 'application/pdf');
+            // res.setHeader('Content-Length', pdfBuffer.length);
+            // res.send(pdfBuffer);
+            const resp = {
+                "pdf": pdfBuffer,
+                "id": id,
+                "file_name": `Salary Slip ~ ${salaryData.name} | ${salaryData.month_formated}`
+            };
+            res.json({ status: 1, res_data: resp });
         } catch (error) {
             console.error("Error during Puppeteer execution:", error);
             res.status(500).json({ error: "Internal server error", details: error.message });
@@ -525,4 +505,32 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
     }
 });
 
+router.post('/email', upload.none(), [], async (req, res)=>{
+    let { id, pdfData } = req.body;
+    try {
+        console.log("email call");
+        const transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 4665,
+            secure: true, // true for port 465, false for other ports
+            auth: {
+              user: "mparth141@gmail.email",
+              pass: "Parth@10897$PA",
+            },
+        });
+        console.log("email call 2");
+        const info = await transporter.sendMail({
+            from: '"Unixel Infotech" <mparth141@gmail.email>', // sender address
+            to: "marshalmangukiya@gmail.com", // list of receivers
+            subject: "Hello ✔", // Subject line
+            text: "Hello Unixel?", // plain text body
+            html: "<b>Hello Unixel?</b>", // html body
+        });
+        console.log("email call 3");
+    
+        console.log("Message sent: %s", info.messageId);
+    } catch (error){
+        res.status(500).json({ status:0, error: "Internal server error"});
+    }
+});
 module.exports = router;
