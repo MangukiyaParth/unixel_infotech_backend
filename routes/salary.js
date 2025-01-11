@@ -524,11 +524,11 @@ router.post('/email', upload.none(), [], async (req, res)=>{
             const { data, error } = await resend.emails.send({
                 from: 'Unixel Infotech <salary@hr.unixelinfotech.com>',
                 to: [salaryData?.email],
-                subject: 'Unixel - Salary Slip',
+                subject: `Salary Slip - ${salaryData?.month_formated}`,
                 html: `<p>Please find your salary slip of <strong>${salaryData?.month_formated}</strong> in attechment bellow!</p>`,
                 attachments: [
                     {
-                        filename: `salary_slip.pdf`,
+                        filename: `salary_slip_${salaryData?.month_formated}.pdf`,
                         content: pdfBase64, // Send as Base64
                     },
                 ],
