@@ -9,6 +9,7 @@ const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
 const path = require('path');
 const fs = require('fs');
+const nodemailer = require("nodemailer");
 
 // Create a Salary
 router.post('/', fetchuser, upload.none(), [], async (req, res)=>{
@@ -164,7 +165,7 @@ router.get('/detail', fetchuser, upload.none(), [], async (req, res)=>{
 });
 
 router.get('/slip', upload.none(), [], async (req, res)=>{
-    let { id } = req.query;
+    let { id, sned_mail } = req.query;
     try {
         const salaryData = await dbUtils.execute_single(`SELECT s.*, TO_CHAR(TO_DATE((s.salary_month || '-01'),'YYYY-MM-DD'),'Month YYYY') AS month_formated,
             u.name, u.bank_name AS user_bank_name, u.account_no AS user_account_no, u.pan_no AS user_pan_no, TO_CHAR(TO_DATE(u.join_date,'DD/MM/YYYY'),'DD Mon YYYY') AS join_date, et.employeetype
@@ -482,11 +483,39 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
             const pdfBuffer = await page.pdf({ format: 'A4' }); // Generate the PDF buffer
             await browser.close();
 
-            // Send the PDF buffer as a response
-            // res.setHeader('Content-Type', 'application/pdf');
-            // res.setHeader('Content-Length', pdfBuffer.length);
-            // res.send(pdfBuffer);
-            res.json({ status: 1, res_data: pdfBuffer });
+            if(sned_mail){
+                const transporter = nodemailer.createTransport({
+                    host: "smtp.gmail.com",
+                    port: 4665,
+                    secure: true, // true for port 465, false for other ports
+                    auth: {
+                      user: "mparth141@gmail.email",
+                      pass: "Parth@10897$PA",
+                    },
+                });
+
+                const info = await transporter.sendMail({
+                    from: '"Unixel Infotech" <mparth141@gmail.email>', // sender address
+                    to: "marshalmangukiya@gmail.com", // list of receivers
+                    subject: "Hello ✔", // Subject line
+                    text: "Hello Unixel?", // plain text body
+                    html: "<b>Hello Unixel?</b>", // html body
+                });
+            
+                console.log("Message sent: %s", info.messageId);
+            }
+            else{
+                // Send the PDF buffer as a response
+                // res.setHeader('Content-Type', 'application/pdf');
+                // res.setHeader('Content-Length', pdfBuffer.length);
+                // res.send(pdfBuffer);
+                const resp = {
+                    "pdf": pdfBuffer,
+                    "id": id,
+                    "file_name": `Salary Slip ~ ${salaryData.name} | ${salaryData.month_formated}`
+                };
+                res.json({ status: 1, res_data: resp });
+            }
         } catch (error) {
             console.error("Error during Puppeteer execution:", error);
             res.status(500).json({ error: "Internal server error", details: error.message });
