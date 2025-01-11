@@ -9,7 +9,7 @@ const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
 const path = require('path');
 const fs = require('fs');
-const nodemailer = require("nodemailer");
+import { Resend } from 'resend';
 const isLocal = process.env.NODE_ENV === 'development';
 
 // Create a Salary
@@ -508,27 +508,38 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
 router.post('/email', upload.none(), [], async (req, res)=>{
     let { id, pdfData } = req.body;
     try {
-        console.log("email call");
-        const transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 4665,
-            secure: true, // true for port 465, false for other ports
-            auth: {
-              user: "mparth141@gmail.email",
-              pass: "Parth@10897$PA",
-            },
-        });
-        console.log("email call 2");
-        const info = await transporter.sendMail({
-            from: '"Unixel Infotech" <mparth141@gmail.email>', // sender address
-            to: "marshalmangukiya@gmail.com", // list of receivers
-            subject: "Hello ✔", // Subject line
-            text: "Hello Unixel?", // plain text body
-            html: "<b>Hello Unixel?</b>", // html body
-        });
-        console.log("email call 3");
-    
-        console.log("Message sent: %s", info.messageId);
+        const salaryData = await dbUtils.execute_single(`SELECT s.*, TO_CHAR(TO_DATE((s.salary_month || '-01'),'YYYY-MM-DD'),'Month YYYY') AS month_formated,
+            u.name, u.email
+            FROM tbl_salary s
+            join tbl_users u on u.id = s.user_id 
+            LEFT JOIN tbl_employee_types et ON u.employeetype = et.id
+            WHERE s.id = '${id}'`);
+
+        const resend = new Resend('re_GquiNJNm_B97YdwvePPAa2aLpNn3vtpTb');
+        (async function () {
+            const byteArray = new Uint8Array(JSON.parse(pdfData));
+      		const pdfBlob = new Blob([byteArray], { type: "application/pdf" });
+            const pdfBuffer = Buffer.from(await pdfBlob.arrayBuffer());
+            const pdfBase64 = pdfBuffer.toString('base64');
+            const { data, error } = await resend.emails.send({
+                from: 'Unixel Infotech <salary@hr.unixelinfotech.com>',
+                to: [salaryData?.email],
+                subject: 'Unixel - Salary Slip',
+                html: `<p>Please find your salary slip of <strong>${salaryData?.month_formated}</strong> in attechment bellow!</p>`,
+                attachments: [
+                    {
+                        filename: `salary_slip.pdf`,
+                        content: pdfBase64, // Send as Base64
+                    },
+                ],
+            });
+            if (error) {
+                res.json({ status: 0, message: error?.message });
+            }
+            else {
+                res.json({ status: 1, message: "mail send success fully" });
+            }
+        })();
     } catch (error){
         res.status(500).json({ status:0, error: "Internal server error"});
     }
