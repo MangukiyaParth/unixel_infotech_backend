@@ -337,7 +337,7 @@ router.get('/slip', upload.none(), [], async (req, res)=>{
                     <img src="data:image/png;base64,${logoBase64}" class="logo-img" />
                     <div class="address-div">
                         <sapn>317 - Silver Trade Center, Utran, Surat</span><br/>
-                        <span style="margin-top: 5px">+91 9524856521</span>
+                        <span style="margin-top: 5px">+91 9998389464</span>
                     </div>
                 </div>
                 <div class="w-25 header-amt-div">
